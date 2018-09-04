@@ -10,39 +10,30 @@ namespace rxx {
 class i16 {
   std::int16_t m_value;
 public:
-  explicit i16(std::int16_t value) : m_value{value} {}
-
-  i16(i16 const& that) {
-    m_value = that.m_value;
-  }
-
-  auto operator=(i16 const& that) -> i16& {
-    m_value = that.m_value;
-    return *this;
-  }
+  i16(std::int16_t value) : m_value{value} {}
 
   auto operator==(i16 const& rh) const -> Bool {
-    return Bool{m_value == rh.m_value};
+    return m_value == rh.m_value;
   }
 
   auto operator!=(i16 const& rh) const -> Bool {
-    return Bool{m_value != rh.m_value};
+    return m_value != rh.m_value;
   }
 
   auto operator>(i16 const& rh) const -> Bool {
-    return Bool{m_value > rh.m_value};
+    return m_value > rh.m_value;
   }
 
   auto operator<(i16 const& rh) const -> Bool {
-    return Bool{m_value < rh.m_value};
+    return m_value < rh.m_value;
   }
 
   auto operator>=(i16 const& rh) const -> Bool {
-    return Bool{m_value >= rh.m_value};
+    return m_value >= rh.m_value;
   }
 
   auto operator<=(i16 const& rh) const -> Bool {
-    return Bool{m_value <= rh.m_value};
+    return m_value <= rh.m_value;
   }
 };
 

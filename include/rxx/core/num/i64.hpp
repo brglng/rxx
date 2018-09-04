@@ -10,39 +10,30 @@ namespace rxx {
 class i64 {
   std::int64_t m_value;
 public:
-  explicit i64(std::int64_t value) : m_value{value} {}
-
-  i64(i64 const& that) {
-    m_value = that.m_value;
-  }
-
-  auto operator=(i64 const& that) -> i64& {
-    m_value = that.m_value;
-    return *this;
-  }
+  i64(std::int64_t value) : m_value{value} {}
 
   auto operator==(i64 const& rh) const -> Bool {
-    return Bool{m_value == rh.m_value};
+    return m_value == rh.m_value;
   }
 
   auto operator!=(i64 const& rh) const -> Bool {
-    return Bool{m_value != rh.m_value};
+    return m_value != rh.m_value;
   }
 
   auto operator>(i64 const& rh) const -> Bool {
-    return Bool{m_value > rh.m_value};
+    return m_value > rh.m_value;
   }
 
   auto operator<(i64 const& rh) const -> Bool {
-    return Bool{m_value < rh.m_value};
+    return m_value < rh.m_value;
   }
 
   auto operator>=(i64 const& rh) const -> Bool {
-    return Bool{m_value >= rh.m_value};
+    return m_value >= rh.m_value;
   }
 
   auto operator<=(i64 const& rh) const -> Bool {
-    return Bool{m_value <= rh.m_value};
+    return m_value <= rh.m_value;
   }
 };
 

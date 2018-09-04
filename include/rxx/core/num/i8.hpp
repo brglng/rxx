@@ -10,39 +10,30 @@ namespace rxx {
 class i8 {
   std::int8_t m_value;
 public:
-  explicit i8(std::int8_t value) : m_value{value} {}
-
-  i8(i8 const& that) {
-    m_value = that.m_value;
-  }
-
-  auto operator=(i8 const& that) -> i8& {
-    m_value = that.m_value;
-    return *this;
-  }
+  i8(std::int8_t value) : m_value{value} {}
 
   auto operator==(i8 const& rh) const -> Bool {
-    return Bool{m_value == rh.m_value};
+    return m_value == rh.m_value;
   }
 
   auto operator!=(i8 const& rh) const -> Bool {
-    return Bool{m_value != rh.m_value};
+    return m_value != rh.m_value;
   }
 
   auto operator>(i8 const& rh) const -> Bool {
-    return Bool{m_value > rh.m_value};
+    return m_value > rh.m_value;
   }
 
   auto operator<(i8 const& rh) const -> Bool {
-    return Bool{m_value < rh.m_value};
+    return m_value < rh.m_value;
   }
 
   auto operator>=(i8 const& rh) const -> Bool {
-    return Bool{m_value >= rh.m_value};
+    return m_value >= rh.m_value;
   }
 
   auto operator<=(i8 const& rh) const -> Bool {
-    return Bool{m_value <= rh.m_value};
+    return m_value <= rh.m_value;
   }
 };
 

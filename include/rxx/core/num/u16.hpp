@@ -10,7 +10,7 @@ namespace rxx {
 class u16 {
   std::uint16_t m_value;
 public:
-  explicit u16(std::uint16_t value) : m_value{value} {}
+  u16(std::uint16_t value) : m_value{value} {}
 
   u16(u16 const& that) {
     m_value = that.m_value;
@@ -22,27 +22,27 @@ public:
   }
 
   auto operator==(u16 const& rh) const -> Bool {
-    return Bool{m_value == rh.m_value};
+    return m_value == rh.m_value;
   }
 
   auto operator!=(u16 const& rh) const -> Bool {
-    return Bool{m_value != rh.m_value};
+    return m_value != rh.m_value;
   }
 
   auto operator>(u16 const& rh) const -> Bool {
-    return Bool{m_value > rh.m_value};
+    return m_value > rh.m_value;
   }
 
   auto operator<(u16 const& rh) const -> Bool {
-    return Bool{m_value < rh.m_value};
+    return m_value < rh.m_value;
   }
 
   auto operator>=(u16 const& rh) const -> Bool {
-    return Bool{m_value >= rh.m_value};
+    return m_value >= rh.m_value;
   }
 
   auto operator<=(u16 const& rh) const -> Bool {
-    return Bool{m_value <= rh.m_value};
+    return m_value <= rh.m_value;
   }
 };
 

@@ -10,39 +10,30 @@ namespace rxx {
 class i32 {
   std::int32_t m_value;
 public:
-  explicit i32(std::int32_t value) : m_value{value} {}
-
-  i32(i32 const& that) {
-    m_value = that.m_value;
-  }
-
-  auto operator=(i32 const& that) -> i32& {
-    m_value = that.m_value;
-    return *this;
-  }
+  i32(std::int32_t value) : m_value{value} {}
 
   auto operator==(i32 const& rh) const -> Bool {
-    return Bool{m_value == rh.m_value};
+    return m_value == rh.m_value;
   }
 
   auto operator!=(i32 const& rh) const -> Bool {
-    return Bool{m_value != rh.m_value};
+    return m_value != rh.m_value;
   }
 
   auto operator>(i32 const& rh) const -> Bool {
-    return Bool{m_value > rh.m_value};
+    return m_value > rh.m_value;
   }
 
   auto operator<(i32 const& rh) const -> Bool {
-    return Bool{m_value < rh.m_value};
+    return m_value < rh.m_value;
   }
 
   auto operator>=(i32 const& rh) const -> Bool {
-    return Bool{m_value >= rh.m_value};
+    return m_value >= rh.m_value;
   }
 
   auto operator<=(i32 const& rh) const -> Bool {
-    return Bool{m_value <= rh.m_value};
+    return m_value <= rh.m_value;
   }
 };
 

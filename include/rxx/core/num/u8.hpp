@@ -3,14 +3,14 @@
 
 #include <utility>
 #include <cstdint>
-#include "rxx/bool.hpp"
+#include "rxx/core/bool.hpp"
 
 namespace rxx {
 
 class u8 {
   std::uint8_t m_value;
 public:
-  explicit u8(std::uint8_t value) : m_value{value} {}
+  u8(std::uint8_t value) : m_value{value} {}
 
   u8(u8 const& that) {
     m_value = that.m_value;
@@ -22,27 +22,27 @@ public:
   }
 
   auto operator==(u8 const& rh) const -> Bool {
-    return Bool{m_value == rh.m_value};
+    return m_value == rh.m_value;
   }
 
   auto operator!=(u8 const& rh) const -> Bool {
-    return Bool{m_value != rh.m_value};
+    return m_value != rh.m_value;
   }
 
   auto operator>(u8 const& rh) const -> Bool {
-    return Bool{m_value > rh.m_value};
+    return m_value > rh.m_value;
   }
 
   auto operator<(u8 const& rh) const -> Bool {
-    return Bool{m_value < rh.m_value};
+    return m_value < rh.m_value;
   }
 
   auto operator>=(u8 const& rh) const -> Bool {
-    return Bool{m_value >= rh.m_value};
+    return m_value >= rh.m_value;
   }
 
   auto operator<=(u8 const& rh) const -> Bool {
-    return Bool{m_value <= rh.m_value};
+    return m_value <= rh.m_value;
   }
 };
 

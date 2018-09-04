@@ -10,39 +10,30 @@ namespace rxx {
 class f64 {
   float m_value;
 public:
-  explicit f64(float value) : m_value{value} {}
-
-  f64(f64 const& that) {
-    m_value = that.m_value;
-  }
-
-  auto operator=(f64 const& that) -> f64& {
-    m_value = that.m_value;
-    return *this;
-  }
+  f64(float value) : m_value{value} {}
 
   auto operator==(f64 const& rh) const -> Bool {
-    return Bool{m_value == rh.m_value};
+    return m_value == rh.m_value;
   }
 
   auto operator!=(f64 const& rh) const -> Bool {
-    return Bool{m_value != rh.m_value};
+    return m_value != rh.m_value;
   }
 
   auto operator>(f64 const& rh) const -> Bool {
-    return Bool{m_value > rh.m_value};
+    return m_value > rh.m_value;
   }
 
   auto operator<(f64 const& rh) const -> Bool {
-    return Bool{m_value < rh.m_value};
+    return m_value < rh.m_value;
   }
 
   auto operator>=(f64 const& rh) const -> Bool {
-    return Bool{m_value >= rh.m_value};
+    return m_value >= rh.m_value;
   }
 
   auto operator<=(f64 const& rh) const -> Bool {
-    return Bool{m_value <= rh.m_value};
+    return m_value <= rh.m_value;
   }
 };
 

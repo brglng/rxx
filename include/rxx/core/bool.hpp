@@ -1,5 +1,5 @@
-#ifndef __RXX_BOOLEAN_HPP__
-#define __RXX_BOOLEAN_HPP__
+#ifndef __RXX_CORE_BOOL_HPP__
+#define __RXX_CORE_BOOL_HPP__
 
 #include <utility>
 
@@ -9,35 +9,35 @@ class Bool {
   bool m_value;
 
 public:
-  explicit Bool(bool value) : m_value{value} {}
-  Bool(Bool const& that) : m_value{that.m_value} {}
-  auto operator=(Bool const& that) -> Bool& {
-    m_value = that.m_value;
-    return *this;
-  }
+  Bool(bool value) : m_value{value} {}
 
   operator bool() const {
     return m_value;
   }
 
+  auto operator=(bool value) -> Bool& {
+    m_value = value;
+    return *this;
+  }
+
   auto operator==(Bool const& that) const -> Bool {
-    return Bool{this->m_value == that.m_value};
+    return this->m_value == that.m_value;
   }
 
   auto operator!=(Bool const& that) const -> Bool {
-    return Bool{this->m_value != that.m_value};
+    return this->m_value != that.m_value;
   }
 
   auto operator&&(Bool const& that) const -> Bool {
-    return Bool{this->m_value && that.m_value};
+    return this->m_value && that.m_value;
   }
 
   auto operator||(Bool const& that) const -> Bool {
-    return Bool{this->m_value || that.m_value};
+    return this->m_value || that.m_value;
   }
 
   auto operator!() const -> Bool {
-    return Bool{!this->m_value};
+    return !this->m_value;
   }
 
   auto operator&(Bool const& that) const ->Bool {
@@ -57,14 +57,6 @@ public:
   }
 };
 
-auto True() -> Bool {
-  return Bool{true};
 }
 
-auto False() -> Bool {
-  return Bool{false};
-}
-
-}
-
-#endif /* end of include guard: __RXX_BOOLEAN_HPP__ */
+#endif /* end of include guard: __RXX_CORE_BOOL_HPP__ */

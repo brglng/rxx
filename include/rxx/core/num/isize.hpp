@@ -9,43 +9,35 @@ namespace rxx {
 class isize {
 #if defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64)
   int64_t m_value;
-  explicit isize(int64_t value) : m_value{value} {}
+  isize(int64_t value) : m_value{value} {}
 #else
   int32_t m_value;
-  explicit isize(int32_t value) : m_value{value} {}
+  isize(int32_t value) : m_value{value} {}
 #endif
 
-  isize(isize const& that) {
-    m_value = that.m_value;
-  }
-
-  auto operator=(isize const& that) -> isize& {
-    m_value = that.m_value;
-    return *this;
-  }
-
+public:
   auto operator==(isize const& that) const -> Bool {
-    return Bool{m_value == that.m_value};
+    return m_value == that.m_value;
   }
 
   auto operator!=(isize const& that) const -> Bool {
-    return Bool{m_value != that.m_value};
+    return m_value != that.m_value;
   }
 
   auto operator>(isize const& that) const -> Bool {
-    return Bool{m_value > that.m_value};
+    return m_value > that.m_value;
   }
 
   auto operator<(isize const& that) const -> Bool {
-    return Bool{m_value < that.m_value};
+    return m_value < that.m_value;
   }
 
   auto operator>=(isize const& that) const -> Bool {
-    return Bool{m_value >= that.m_value};
+    return m_value >= that.m_value;
   }
 
   auto operator<=(isize const& that) const -> Bool {
-    return Bool{m_value <= that.m_value};
+    return m_value <= that.m_value;
   }
 };
 
