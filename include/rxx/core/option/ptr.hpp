@@ -11,63 +11,63 @@ template<typename T> class Option;
 
 template<typename T>
 class Option<T*> {
-  T* m_ptr;
+    T* m_ptr;
 
 public:
-  explicit Option(T* ptr) : m_ptr{ptr} {}
+    explicit Option(T* ptr) : m_ptr{ptr} {}
 
-  Option(Option&& that) : m_ptr{that.m_ptr} {
-    that.m_ptr = nullptr;
-  }
-
-  Option(Option const& that) : m_ptr{that.m_ptr} {}
-
-  auto operator=(Option&& that) -> Option& {
-    if (this != &that) {
-      m_ptr = that.m_ptr;
+    Option(Option&& that) : m_ptr{that.m_ptr} {
+        that.m_ptr = nullptr;
     }
-    return *this;
-  }
 
-  auto operator=(Option const& that) -> Option& {
-    if (this != &that) {
-      m_ptr = that.m_ptr;
+    Option(Option const& that) : m_ptr{that.m_ptr} {}
+
+    auto operator=(Option&& that) -> Option& {
+        if (this != &that) {
+            m_ptr = that.m_ptr;
+        }
+        return *this;
     }
-    return *this;
-  }
 
-  auto is_some() const -> Bool {
-    return m_ptr != nullptr;
-  }
-
-  auto is_none() const -> Bool {
-    return !is_some();
-  }
-
-  auto as_ref() -> Option<T*> {
-    return Option<T*>{m_ptr};
-  }
-
-  auto as_const() const -> Option<T const*> {
-    return Option<T const*>{m_ptr};
-  }
-
-  auto expect(str msg) -> T* {
-    if (is_none()) {
-      panic(msg);
+    auto operator=(Option const& that) -> Option& {
+        if (this != &that) {
+            m_ptr = that.m_ptr;
+        }
+        return *this;
     }
-    T* ptr = m_ptr;
-    m_ptr = nullptr;
-    return ptr;
-  }
 
-  auto operator==(Option const& that) const -> Bool {
-    return m_ptr == that.m_ptr;
-  }
+    auto is_some() const -> Bool {
+        return m_ptr != nullptr;
+    }
 
-  auto operator==(OptionNone const&) const -> Bool {
-    return m_ptr == nullptr;
-  }
+    auto is_none() const -> Bool {
+        return !is_some();
+    }
+
+    auto as_ref() -> Option<T*> {
+        return Option<T*>{m_ptr};
+    }
+
+    auto as_const() const -> Option<T const*> {
+        return Option<T const*>{m_ptr};
+    }
+
+    auto expect(str msg) -> T* {
+        if (is_none()) {
+            panic(msg);
+        }
+        T* ptr = m_ptr;
+        m_ptr = nullptr;
+        return ptr;
+    }
+
+    auto operator==(Option const& that) const -> Bool {
+        return m_ptr == that.m_ptr;
+    }
+
+    auto operator==(OptionNone const&) const -> Bool {
+        return m_ptr == nullptr;
+    }
 };
 
 }

@@ -9,50 +9,50 @@ class Bool {
   bool m_value;
 
 public:
-  Bool(bool value) : m_value{value} {}
+  constexpr Bool(bool value) noexcept : m_value{value} {}
 
-  operator bool() const {
+  constexpr operator bool() const noexcept {
     return m_value;
   }
 
-  auto operator=(bool value) -> Bool& {
+  auto operator=(bool value) noexcept -> Bool& {
     m_value = value;
     return *this;
   }
 
-  auto operator==(Bool const& that) const -> Bool {
+  auto constexpr operator==(Bool const& that) const noexcept -> Bool {
     return this->m_value == that.m_value;
   }
 
-  auto operator!=(Bool const& that) const -> Bool {
+  auto constexpr operator!=(Bool const& that) const noexcept -> Bool {
     return this->m_value != that.m_value;
   }
 
-  auto operator&&(Bool const& that) const -> Bool {
+  auto constexpr operator&&(Bool const& that) const noexcept -> Bool {
     return this->m_value && that.m_value;
   }
 
-  auto operator||(Bool const& that) const -> Bool {
+  auto constexpr operator||(Bool const& that) const noexcept -> Bool {
     return this->m_value || that.m_value;
   }
 
-  auto operator!() const -> Bool {
+  auto constexpr operator!() const noexcept -> Bool {
     return !this->m_value;
   }
 
-  auto operator&(Bool const& that) const ->Bool {
+  auto constexpr operator&(Bool const& that) const noexcept ->Bool {
     return *this && that;
   }
 
-  auto operator|(Bool const& that) const -> Bool {
+  auto constexpr operator|(Bool const& that) const noexcept -> Bool {
     return *this || that;
   }
 
-  auto operator~() const -> Bool {
+  auto constexpr operator~() const noexcept -> Bool {
     return !(*this);
   }
 
-  auto operator^(Bool const& that) const -> Bool {
+  auto constexpr operator^(Bool const& that) const noexcept -> Bool {
     return *this != that;
   }
 };

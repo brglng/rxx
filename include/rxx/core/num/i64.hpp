@@ -1,40 +1,46 @@
-#ifndef __RXX_I64_HPP__
-#define __RXX_I64_HPP__
+#ifndef __RXX_CORE_NUM_I64_HPP__
+#define __RXX_CORE_NUM_I64_HPP__
 
 #include <utility>
 #include <cstdint>
-#include "rxx/bool.hpp"
+#include "rxx/core/bool.hpp"
 
 namespace rxx {
 
 class i64 {
-  std::int64_t m_value;
+    std::int64_t m_value;
+
 public:
-  i64(std::int64_t value) : m_value{value} {}
+    constexpr i64(std::int64_t value) noexcept : m_value{value} {}
 
-  auto operator==(i64 const& rh) const -> Bool {
-    return m_value == rh.m_value;
-  }
+    auto operator=(std::int64_t value) noexcept -> i64& {
+        m_value = value;
+        return *this;
+    }
 
-  auto operator!=(i64 const& rh) const -> Bool {
-    return m_value != rh.m_value;
-  }
+    auto constexpr operator==(i64 const& rh) const noexcept -> Bool {
+        return m_value == rh.m_value;
+    }
 
-  auto operator>(i64 const& rh) const -> Bool {
-    return m_value > rh.m_value;
-  }
+    auto constexpr operator!=(i64 const& rh) const noexcept -> Bool {
+        return m_value != rh.m_value;
+    }
 
-  auto operator<(i64 const& rh) const -> Bool {
-    return m_value < rh.m_value;
-  }
+    auto constexpr operator>(i64 const& rh) const noexcept -> Bool {
+        return m_value > rh.m_value;
+    }
 
-  auto operator>=(i64 const& rh) const -> Bool {
-    return m_value >= rh.m_value;
-  }
+    auto constexpr operator<(i64 const& rh) const noexcept -> Bool {
+        return m_value < rh.m_value;
+    }
 
-  auto operator<=(i64 const& rh) const -> Bool {
-    return m_value <= rh.m_value;
-  }
+    auto constexpr operator>=(i64 const& rh) const noexcept -> Bool {
+        return m_value >= rh.m_value;
+    }
+
+    auto constexpr operator<=(i64 const& rh) const noexcept -> Bool {
+        return m_value <= rh.m_value;
+    }
 };
 
 }

@@ -5,11 +5,7 @@ namespace rxx {
 
 class unit {
 public:
-  unit() {}
-  unit(unit const&) {}
-  auto operator=(unit const&) -> unit& {
-    return *this;
-  }
+  constexpr unit() {}
 };
 
 }

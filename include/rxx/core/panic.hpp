@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fmt/core.h>
+#include "rxx/core/as.hpp"
 #include "rxx/core/str.hpp"
 
 namespace rxx {
@@ -17,7 +18,7 @@ void panic(const str msg, Args const&... args) {
                  ::fmt::string_view {
                      reinterpret_cast<char const*>(
                          msg.as_bytes_const().as_const_ptr()),
-                     msg.len().as_size_t()
+                     as<std::size_t>(msg.len())
                  },
                  args...);
     ::std::terminate();

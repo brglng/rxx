@@ -9,7 +9,6 @@ Rust-flavored C++ template library, aiming to be a practical alternative and add
 ## Differences from STL
 - None of the types are default constructible. `Option<T>` should be used when you need something that are optional.
 - rxx does not use exceptions. Instead, it uses `Option<T>` and `Result<T, E>`.
-- rxx does not use `noexcept`. `constexpr` is used only when necessary.
 
 ## Differences from Rust
 - Rust uses move sementic by default. rxx implements standard copy construtor, move constructor, copy assignment operator and move assignment operator. That means, `std::move()` must be used for moving, otherwise a deep copy is performed.

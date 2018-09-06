@@ -4,7 +4,7 @@
 namespace rxx {
 
 struct OptionNone {
-  explicit constexpr OptionNone(int) {}
+    explicit constexpr OptionNone(int) {}
 };
 constexpr OptionNone None{0};
 

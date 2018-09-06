@@ -1,5 +1,5 @@
-#ifndef __RXX_U8_HPP__
-#define __RXX_U8_HPP__
+#ifndef __RXX_CORE_NUM_U8_HPP__
+#define __RXX_CORE_NUM_U8_HPP__
 
 #include <utility>
 #include <cstdint>
@@ -8,44 +8,41 @@
 namespace rxx {
 
 class u8 {
-  std::uint8_t m_value;
+    std::uint8_t m_value;
+
 public:
-  u8(std::uint8_t value) : m_value{value} {}
+    constexpr u8(std::uint8_t value) noexcept : m_value{value} {}
 
-  u8(u8 const& that) {
-    m_value = that.m_value;
-  }
+    auto operator=(std::uint8_t value) noexcept -> u8& {
+        m_value = value;
+        return *this;
+    }
 
-  auto operator=(u8 const& that) -> u8& {
-    m_value = that.m_value;
-    return *this;
-  }
+    auto constexpr operator==(u8 const& rh) const noexcept -> Bool {
+        return m_value == rh.m_value;
+    }
 
-  auto operator==(u8 const& rh) const -> Bool {
-    return m_value == rh.m_value;
-  }
+    auto constexpr operator!=(u8 const& rh) const noexcept -> Bool {
+        return m_value != rh.m_value;
+    }
 
-  auto operator!=(u8 const& rh) const -> Bool {
-    return m_value != rh.m_value;
-  }
+    auto constexpr operator>(u8 const& rh) const noexcept -> Bool {
+        return m_value > rh.m_value;
+    }
 
-  auto operator>(u8 const& rh) const -> Bool {
-    return m_value > rh.m_value;
-  }
+    auto constexpr operator<(u8 const& rh) const noexcept -> Bool {
+        return m_value < rh.m_value;
+    }
 
-  auto operator<(u8 const& rh) const -> Bool {
-    return m_value < rh.m_value;
-  }
+    auto constexpr operator>=(u8 const& rh) const noexcept -> Bool {
+        return m_value >= rh.m_value;
+    }
 
-  auto operator>=(u8 const& rh) const -> Bool {
-    return m_value >= rh.m_value;
-  }
-
-  auto operator<=(u8 const& rh) const -> Bool {
-    return m_value <= rh.m_value;
-  }
+    auto constexpr operator<=(u8 const& rh) const noexcept -> Bool {
+        return m_value <= rh.m_value;
+    }
 };
 
 }
 
-#endif /* end of include guard: __RXX_U8_HPP__ */
+#endif /* end of include guard: __RXX_CORE_NUM_U8_HPP__ */

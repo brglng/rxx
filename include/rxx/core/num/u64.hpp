@@ -1,51 +1,48 @@
-#ifndef __RXX_U64_HPP__
-#define __RXX_U64_HPP__
+#ifndef __RXX_CORE_NUM_U64_HPP__
+#define __RXX_CORE_NUM_U64_HPP__
 
 #include <utility>
 #include <cstdint>
-#include "rxx/bool.hpp"
+#include "rxx/core/bool.hpp"
 
 namespace rxx {
 
 class u64 {
-  std::uint64_t m_value;
+    std::uint64_t m_value;
+
 public:
-  u64(std::uint64_t value) : m_value{value} {}
+    constexpr u64(std::uint64_t value) noexcept : m_value{value} {}
 
-  u64(u64 const& that) {
-    m_value = that.m_value;
-  }
+    auto operator=(std::uint64_t value) noexcept -> u64& {
+        m_value = value;
+        return *this;
+    }
 
-  auto operator=(u64 const& that) -> u64& {
-    m_value = that.m_value;
-    return *this;
-  }
+    auto constexpr operator==(u64 const& rh) const noexcept -> Bool {
+        return m_value == rh.m_value;
+    }
 
-  auto operator==(u64 const& rh) const -> Bool {
-    return m_value == rh.m_value;
-  }
+    auto constexpr operator!=(u64 const& rh) const noexcept -> Bool {
+        return m_value != rh.m_value;
+    }
 
-  auto operator!=(u64 const& rh) const -> Bool {
-    return m_value != rh.m_value;
-  }
+    auto constexpr operator>(u64 const& rh) const noexcept -> Bool {
+        return m_value > rh.m_value;
+    }
 
-  auto operator>(u64 const& rh) const -> Bool {
-    return m_value > rh.m_value;
-  }
+    auto constexpr operator<(u64 const& rh) const noexcept -> Bool {
+        return m_value < rh.m_value;
+    }
 
-  auto operator<(u64 const& rh) const -> Bool {
-    return m_value < rh.m_value;
-  }
+    auto constexpr operator>=(u64 const& rh) const noexcept -> Bool {
+        return m_value >= rh.m_value;
+    }
 
-  auto operator>=(u64 const& rh) const -> Bool {
-    return m_value >= rh.m_value;
-  }
-
-  auto operator<=(u64 const& rh) const -> Bool {
-    return m_value <= rh.m_value;
-  }
+    auto constexpr operator<=(u64 const& rh) const noexcept -> Bool {
+        return m_value <= rh.m_value;
+    }
 };
 
 }
 
-#endif /* end of include guard: __RXX_U64_HPP__ */
+#endif /* end of include guard: __RXX_CORE_NUM_U64_HPP__ */
