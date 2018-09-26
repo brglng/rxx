@@ -1,10 +1,9 @@
 #ifndef __RXX_CORE_NUM_F32_HPP__
 #define __RXX_CORE_NUM_F32_HPP__
 
-#include <utility>
 #include <cstdint>
 #include "rxx/core/as.hpp"
-#include "rxx/core/bool.hpp"
+#include "rxx/core/bool/def.hpp"
 
 namespace rxx {
 

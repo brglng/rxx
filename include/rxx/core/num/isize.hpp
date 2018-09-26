@@ -2,7 +2,7 @@
 #define __RXX_CORE_NUM_ISIZE_HPP__
 
 #include <cstdint>
-#include "rxx/core/bool.hpp"
+#include "rxx/core/bool/def.hpp"
 
 namespace rxx {
 

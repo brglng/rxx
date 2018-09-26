@@ -8,11 +8,11 @@
 #include "rxx/core/num/i32.hpp"
 #include "rxx/core/num/i128.hpp"
 #include "rxx/core/num/isize.hpp"
-#include "rxx/core/num/u8.hpp"
+#include "rxx/core/num/u8/u8.hpp"
 #include "rxx/core/num/u16.hpp"
 #include "rxx/core/num/u32.hpp"
 #include "rxx/core/num/u64.hpp"
 #include "rxx/core/num/u128.hpp"
-#include "rxx/core/num/usize.hpp"
+#include "rxx/core/num/usize/usize.hpp"
 
 #endif /* end of include guard: __RXX_CORE_NUM_MOD_HPP__ */

@@ -1,19 +1,24 @@
-#ifndef __RXX_CORE_NUM_U8_HPP__
-#define __RXX_CORE_NUM_U8_HPP__
+#ifndef __RXX_CORE_NUM_U8_DEF_HPP__
+#define __RXX_CORE_NUM_U8_DEF_HPP__
 
-#include <utility>
-#include <cstdint>
-#include "rxx/core/bool.hpp"
+#include "rxx/core/bool/def.hpp"
 
 namespace rxx {
 
 class u8 {
-    std::uint8_t m_value;
+    unsigned char m_value;
 
 public:
-    constexpr u8(std::uint8_t value) noexcept : m_value{value} {}
+    constexpr u8(unsigned char value) noexcept : m_value{value} {}
 
-    auto operator=(std::uint8_t value) noexcept -> u8& {
+    constexpr auto as_uint8_t() const noexcept -> unsigned char {
+        return m_value;
+    }
+
+    template<typename T>
+    T as() const noexcept;
+
+    auto operator=(unsigned char value) noexcept -> u8& {
         m_value = value;
         return *this;
     }
@@ -45,4 +50,4 @@ public:
 
 }
 
-#endif /* end of include guard: __RXX_CORE_NUM_U8_HPP__ */
+#endif /* end of include guard: __RXX_CORE_NUM_U8_DEF_HPP__ */

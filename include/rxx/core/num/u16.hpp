@@ -3,7 +3,7 @@
 
 #include <utility>
 #include <cstdint>
-#include "rxx/core/bool.hpp"
+#include "rxx/core/bool/def.hpp"
 
 namespace rxx {
 

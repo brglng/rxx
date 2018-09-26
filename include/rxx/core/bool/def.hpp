@@ -1,12 +1,10 @@
-#ifndef __RXX_CORE_BOOL_HPP__
-#define __RXX_CORE_BOOL_HPP__
-
-#include <utility>
+#ifndef __RXX_CORE_BOOL_DEF_HPP__
+#define __RXX_CORE_BOOL_DEF_HPP__
 
 namespace rxx {
 
 class Bool {
-  bool m_value;
+    unsigned char m_value;
 
 public:
   constexpr Bool(bool value) noexcept : m_value{value} {}
@@ -15,7 +13,7 @@ public:
     return m_value;
   }
 
-  auto operator=(bool value) noexcept -> Bool& {
+  auto operator=(bool const& value) noexcept -> Bool& {
     m_value = value;
     return *this;
   }
@@ -59,4 +57,4 @@ public:
 
 }
 
-#endif /* end of include guard: __RXX_CORE_BOOL_HPP__ */
+#endif /* end of include guard: __RXX_CORE_BOOL_DEF_HPP__ */
