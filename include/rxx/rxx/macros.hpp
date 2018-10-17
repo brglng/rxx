@@ -1,7 +1,8 @@
 #ifndef __RXX_STD_MACROS_HPP__
 #define __RXX_STD_MACROS_HPP__
 
-#include "rxx/core/panic.hpp"
+#include <cstdio>
+#include "rxx/core/panic/def.hpp"
 
 #define RXX_STRINGIFY(__x) #__x
 

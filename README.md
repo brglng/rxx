@@ -1,5 +1,5 @@
 # rxx
-Rust-flavored C++ template library, aiming to be a practical alternative and addition to STL.
+Aggresive Rust-flavored C++ template library, aiming to bring Rust experience to C++.
 
 ## Prerequisites
 - Compiler with C++11 support
@@ -8,10 +8,10 @@ Rust-flavored C++ template library, aiming to be a practical alternative and add
 
 ## Differences from STL
 - None of the types are default constructible. `Option<T>` should be used when you need something that are optional.
+- rxx does not implement standard copy construtor or copy assignment operator. Instead, it uses move sementic by default by implementing "mutable reference constructor" and "mutable reference copy assignment operator" (i.e. `T::T(T&)` and `T::operator=(T&)`). Standard move constructor and move assignment operator are also implemented. For non-trivially copyable types, `.clone()` must be used to perform a deep copy, otherwise, copy constructors are only used for trivially copyable types.
 - rxx does not use exceptions. Instead, it uses `Option<T>` and `Result<T, E>`.
 
 ## Differences from Rust
-- Rust uses move sementic by default. rxx implements standard copy construtor, move constructor, copy assignment operator and move assignment operator. That means, `std::move()` must be used for moving, otherwise a deep copy is performed.
 - All types are by default mutable. Functions like `.as_mut()` in Rust correspond to `.as_const()` in rxx.
 - STL style iterators are provided to be compatible with `for (auto&& elem : container)` syntax.
 - Macros are in all upper case and prefixed with `RXX_`.

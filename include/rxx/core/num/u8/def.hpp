@@ -1,14 +1,19 @@
 #ifndef __RXX_CORE_NUM_U8_DEF_HPP__
 #define __RXX_CORE_NUM_U8_DEF_HPP__
 
-#include "rxx/core/bool/def.hpp"
-
 namespace rxx {
+
+template<typename T, typename U> struct As;
+
+class Bool;
+class usize;
 
 class u8 {
     unsigned char m_value;
 
 public:
+    static const u8 MAX;
+
     constexpr u8(unsigned char value) noexcept : m_value{value} {}
 
     constexpr auto as_uint8_t() const noexcept -> unsigned char {
@@ -23,29 +28,27 @@ public:
         return *this;
     }
 
-    auto constexpr operator==(u8 const& rh) const noexcept -> Bool {
-        return m_value == rh.m_value;
-    }
+    auto constexpr operator==(u8 rh) const noexcept -> Bool;
+    auto constexpr operator!=(u8 rh) const noexcept -> Bool;
+    auto constexpr operator>(u8 rh) const noexcept -> Bool;
+    auto constexpr operator<(u8 rh) const noexcept -> Bool;
+    auto constexpr operator>=(u8 rh) const noexcept -> Bool;
+    auto constexpr operator<=(u8 rh) const noexcept -> Bool;
+};
 
-    auto constexpr operator!=(u8 const& rh) const noexcept -> Bool {
-        return m_value != rh.m_value;
-    }
+inline auto operator+(u8* lh, usize rh) noexcept -> u8*;
+inline auto operator-(u8* lh, usize rh) noexcept -> u8*;
+inline auto operator-(u8* lh, usize rh) noexcept -> u8*;
+inline auto operator-(u8* lh, u8 rh) noexcept -> u8*;
 
-    auto constexpr operator>(u8 const& rh) const noexcept -> Bool {
-        return m_value > rh.m_value;
-    }
+template<>
+struct As<usize, u8*> {
+    static auto as(u8* from) noexcept -> usize;
+};
 
-    auto constexpr operator<(u8 const& rh) const noexcept -> Bool {
-        return m_value < rh.m_value;
-    }
-
-    auto constexpr operator>=(u8 const& rh) const noexcept -> Bool {
-        return m_value >= rh.m_value;
-    }
-
-    auto constexpr operator<=(u8 const& rh) const noexcept -> Bool {
-        return m_value <= rh.m_value;
-    }
+template<>
+struct As<usize, u8> {
+    static constexpr auto as(u8 from) noexcept -> usize;
 };
 
 }

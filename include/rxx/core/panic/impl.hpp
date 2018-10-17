@@ -1,18 +1,19 @@
-#ifndef __RXX_PANIC_HPP__
-#define __RXX_PANIC_HPP__
+#ifndef __RXX_CORE_PANIC_IMPL_HPP__
+#define __RXX_CORE_PANIC_IMPL_HPP__
 
 #include <exception>
 #include <cstdio>
 #include <cstdlib>
 #include <fmt/core.h>
-#include "rxx/core/as.hpp"
-#include "rxx/core/str.hpp"
+#include "rxx/core/as/def.hpp"
+#include "rxx/core/panic/def.hpp"
+#include "rxx/core/str/def.hpp"
 
 namespace rxx {
 
 /* should update to our new API after the wrapper around fmtlib is finished */
 template<typename... Args>
-void panic(const str msg, Args const&... args) {
+inline void panic(const str msg, Args const&... args) {
     ::std::fputs("panicked at ", stderr);
     ::fmt::print(stderr,
                  ::fmt::string_view {
@@ -24,11 +25,11 @@ void panic(const str msg, Args const&... args) {
     ::std::terminate();
 }
 
-void panic() {
+inline void panic() {
     ::std::fputs("panicked", stderr);
     ::std::terminate();
 }
 
 }
 
-#endif /* end of include guard: __RXX_PANIC_HPP__ */
+#endif /* end of include guard: __RXX_CORE_PANIC_HPP__ */

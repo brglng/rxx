@@ -3,10 +3,17 @@
 
 namespace rxx {
 
-struct OptionNone {
-    explicit constexpr OptionNone(int) {}
+namespace option {
+namespace impl {
+
+struct None {
+    explicit constexpr None(int) {}
 };
-constexpr OptionNone None{0};
+
+}
+}
+
+constexpr option::impl::None None{0};
 
 }
 

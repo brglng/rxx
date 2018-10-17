@@ -2,8 +2,6 @@
 #define __RXX_CORE_NUM_USIZE_USIZE_HPP__
 
 #include "rxx/core/num/usize/def.hpp"
-#include "rxx/core/num/usize/as_size_t.hpp"
-#include "rxx/core/num/usize/as_u8.hpp"
-#include "rxx/core/num/usize/as.hpp"
+#include "rxx/core/num/usize/impl.hpp"
 
 #endif /* end of include guard: __RXX_CORE_NUM_USIZE_USIZE_HPP__ */
