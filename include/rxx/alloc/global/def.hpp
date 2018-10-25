@@ -7,6 +7,9 @@ namespace rxx {
 
 class u8;
 class usize;
+
+namespace alloc {
+
 class Layout;
 
 class _Global {
@@ -26,6 +29,7 @@ public:
 
 extern _Global Global;
 
+}
 }
 
 #endif /* end of include guard: __RXX_ALLOC_GLOBAL_DEF_HPP__ */

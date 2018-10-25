@@ -4,11 +4,13 @@
 #include <cstdlib>
 #include <cstring>
 #include "rxx/alloc/global/def.hpp"
-#include "rxx/core/alloc/layout/def.hpp"
-#include "rxx/core/num/u8/def.hpp"
-#include "rxx/core/num/usize/def.hpp"
+#include "rxx/alloc/layout/def.hpp"
+#include "rxx/as/def.hpp"
+#include "rxx/u8/def.hpp"
+#include "rxx/usize/def.hpp"
 
 namespace rxx {
+namespace alloc {
 
 inline auto _Global::alloc(Layout layout) noexcept -> u8* {
     auto request_size = layout.size() + layout.align();
@@ -55,7 +57,7 @@ inline auto _Global::realloc(u8* ptr, Layout layout, usize new_size) noexcept ->
     return ret;
 }
 
-
+}
 }
 
 #endif /* end of include guard: __RXX_ALLOC_GLOBAL_IMPL_HPP__ */
