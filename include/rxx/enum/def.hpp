@@ -67,8 +67,8 @@ struct Move<T> {
 
 template<typename T, typename... Ts>
 struct Copy {
-    static void construct(std::size_t from_id, void const* from, void* to) {
-        if (from_id == typeid(T).hash_code()) {
+    static void construct(std::type_index from_id, void const* from, void* to) {
+        if (from_id == std::type_index(typeid(T))) {
             new (to) T(*reinterpret_cast<T const*>(from));
         } else {
             Copy<Ts...>::construct(from_id, from, to);
@@ -86,8 +86,8 @@ struct Copy {
 
 template<typename T>
 struct Copy<T> {
-    static void construct(std::size_t from_id, void const* from, void* to) {
-        if (from_id == typeid(T).hash_code()) {
+    static void construct(std::type_index from_id, void const* from, void* to) {
+        if (from_id == std::type_index(typeid(T))) {
             new (to) T(*reinterpret_cast<T const*>(from));
         }
     }
