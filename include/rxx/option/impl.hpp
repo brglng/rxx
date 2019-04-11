@@ -2,15 +2,14 @@
 #define __RXX_OPTION_IMPL_HPP__
 
 #include "rxx/option/def.hpp"
-#include "rxx/str/def.hpp"
 #include "rxx/result/def.hpp"
 
 namespace rxx {
 
 template<typename T>
 template<typename E>
-inline auto Option<T>::ok_or(E&& err) -> Result<T, E> {
-    if (is_some()) {
+auto Option<T>::ok_or(E&& err) noexcept -> Result<T, E> {
+    if (inited()) {
         return Ok(std::move(val()));
     } else {
         return Err(std::forward<E>(err));
@@ -18,13 +17,35 @@ inline auto Option<T>::ok_or(E&& err) -> Result<T, E> {
 }
 
 template<typename T>
-inline auto Option<T>::expect(conststr msg) noexcept -> T {
-    RXX_ASSERT(is_some(), msg);
-    return std::move(val());
+template<typename E>
+auto Option<T>::ok_or(E&& err) const noexcept -> Result<T, E> {
+    if (inited()) {
+        return Ok(val());
+    } else {
+        return Err(std::forward<E>(err));
+    }
+}
+
+template<typename T>
+template<typename F>
+auto Option<T>::ok_or_else(F&& err) -> Result<T, typename invoke_result<typename std::decay<F>::type>::type> {
+    if (inited()) {
+        return Ok(std::move(val()));
+    } else {
+        return Err(invoke(std::forward<F>(err)));
+    }
+}
+
+template<typename T>
+template<typename F>
+auto Option<T>::ok_or_else(F&& err) const -> Result<T, typename invoke_result<typename std::decay<F>::type>::type> {
+    if (inited()) {
+        return Ok(val());
+    } else {
+        return Err(invoke(std::forward<F>(err)));
+    }
 }
 
 }
 
-#include "rxx/option/ref/impl.hpp"
-
-#endif /* end of include guard: __RXX_CORE_OPTION_IMPL_HPP__ */
+#endif /* end of include guard: __RXX_OPTION_IMPL_HPP__ */

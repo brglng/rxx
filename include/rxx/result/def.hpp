@@ -1,23 +1,45 @@
 #ifndef __RXX_RESULT_DEF_HPP__
 #define __RXX_RESULT_DEF_HPP__
 
+#include <cstdio>
 #include <type_traits>
 #include <utility>
 #include <algorithm>
-#include "rxx/bool/def.hpp"
-#include "rxx/result/ok.hpp"
-#include "rxx/result/err.hpp"
+#include <cassert>
+#include "rxx/invoke.hpp"
+#include "rxx/str.hpp"
+#include "rxx/utility.hpp"
 
 namespace rxx {
 
-template<typename T, typename E>
-class Result;
+namespace result {
+namespace impl {
+
+template<typename T>
+struct Ok {
+    T m_ok;
+};
+
+template<typename E>
+struct Err {
+    E m_err;
+};
+
+}
+}
+
+template<typename T, typename E> class Result;
+template<typename T, typename E> class Result<T&, E>;
+template<typename T, typename E> class Result<T, E&>;
+template<typename T, typename E> class Result<T&, E&>;
+template<typename T> class Option;
+template<typename T> class Option<T&>;
 
 template<typename T>
 inline auto Ok(T&& value) -> result::impl::Ok<T>;
 
 template<typename E>
-inline auto Err(E&& err) -> result::impl::Err<E>;
+inline auto Err(E&& error) -> result::impl::Err<E>;
 
 namespace result {
 namespace impl {
@@ -30,119 +52,543 @@ constexpr auto constexpr_max(T const& a, T const& b) -> T const& {
 }
 }
 
+template<typename T, typename U> struct is_result_of_same_err_type : std::false_type {};
+template<typename T, typename U, typename E> struct is_result_of_same_err_type<Result<T, E>, Result<U, E>> : std::true_type {};
+
+template<typename T, typename U> struct is_result_of_same_value_type : std::false_type {};
+template<typename T, typename E1, typename E2> struct is_result_of_same_value_type<Result<T, E1>, Result<T, E2>> : std::true_type {};
+
 template<typename T, typename E>
 class Result {
 private:
-    Bool m_is_ok;
+    bool m_is_ok;
     typename std::aligned_storage<result::impl::constexpr_max(sizeof(T), sizeof(E)),
                                   result::impl::constexpr_max(alignof(T), alignof(E))>::type m_buffer;
 
-    auto val() -> T& {
+    T& value() & noexcept {
         return *reinterpret_cast<T*>(&m_buffer);
     }
 
-    auto val_const() const -> T const& {
+    T&& value() && noexcept {
+        return std::move(*reinterpret_cast<T*>(&m_buffer));
+    }
+
+    constexpr T const& value() const& noexcept {
         return *reinterpret_cast<T const*>(&m_buffer);
     }
 
-    auto err() -> E& {
+    T* valueptr() noexcept {
+        return reinterpret_cast<T*>(&m_buffer);
+    }
+
+    constexpr T const* valueptr() const noexcept {
+        return reinterpret_cast<T const*>(&m_buffer);
+    }
+
+    E& error() & noexcept {
         return *reinterpret_cast<E*>(&m_buffer);
     }
 
-    auto err_const() const -> E const& {
-        return *reinterpret_cast<E*>(&m_buffer);
+    E&& error() && noexcept {
+        return std::move(*reinterpret_cast<E*>(&m_buffer));
+    }
+
+    constexpr E const& error() const& noexcept {
+        return *reinterpret_cast<E const*>(&m_buffer);
+    }
+
+    E* errorptr() noexcept {
+        return reinterpret_cast<E*>(&m_buffer);
+    }
+
+    constexpr E const* errorptr() const noexcept {
+        return reinterpret_cast<E const*>(&m_buffer);
+    }
+
+    void destroy() noexcept {
+        if (m_is_ok) {
+            value().T::~T();
+        } else {
+            error().E::~E();
+        }
     }
 
 public:
-    explicit Result(Bool is_ok, T&& value) : m_is_ok(is_ok) {
-        *reinterpret_cast<T*>(m_buffer) = std::forward<T>(value);
+    explicit Result(T&& value) noexcept(std::is_nothrow_move_constructible<T>::value)
+        : m_is_ok{true} {
+        new (valueptr()) T{std::move(value)};
     }
 
-    explicit Result(Bool is_ok, E&& err) : m_is_ok(is_ok) {
-        *reinterpret_cast<E*>(m_buffer) = std::forward<E>(err);
+    explicit Result(T const& value) noexcept(std::is_nothrow_copy_assignable<T>::value)
+        : m_is_ok{true} {
+        new (valueptr()) T{value};
     }
 
-    Result(result::impl::Ok<T> value) : m_is_ok(true) {
-        val() = std::move(value.m_ok);
+    explicit Result(E&& err) noexcept(std::is_nothrow_move_constructible<E>::value)
+        : m_is_ok(false) {
+        new (errorptr()) T{std::move(err)};
     }
 
-    Result(result::impl::Err<E> err) : m_is_ok(false) {
-        this->err() = std::move(err.m_err);
+    explicit Result(E const& err) noexcept(std::is_nothrow_copy_constructible<E>::value)
+        : m_is_ok(false) {
+        new (errorptr()) T{err};
     }
 
-    Result(Result&& that) : m_is_ok(that.m_is_ok) {
+    Result(result::impl::Ok<T>&& value) noexcept(std::is_nothrow_move_constructible<T>::value)
+        : m_is_ok(true) {
+        new (valueptr()) T{std::move(value.m_ok)};
+    }
+
+    Result(result::impl::Err<E>&& err) noexcept(std::is_nothrow_move_constructible<E>::value)
+        : m_is_ok(false) {
+        new (errorptr()) T{std::move(err.m_err)};
+    }
+
+    Result(result::impl::Ok<T> const& value) noexcept(std::is_nothrow_copy_constructible<T>::value)
+        : m_is_ok(true) {
+        new (valueptr()) T{value.m_ok};
+    }
+
+    Result(result::impl::Err<E> const& err) noexcept(std::is_nothrow_copy_constructible<E>::value)
+        : m_is_ok(false) {
+        new (errorptr()) T{err.m_err};
+    }
+
+    Result(Result&& that) noexcept(std::is_nothrow_move_constructible<T>::value && std::is_nothrow_move_constructible<E>::value)
+        : m_is_ok{that.m_is_ok} {
         if (m_is_ok) {
-            val() = std::move(that.val());
+            new (valueptr()) T{std::move(that.value())};
         } else {
-            err() = std::move(that.err());
+            new (errorptr()) E{std::move(that.error())};
         }
     }
 
-    ~Result() {
+    Result(Result const& that) noexcept(std::is_nothrow_copy_constructible<T>::value && std::is_nothrow_copy_constructible<E>::value)
+        : m_is_ok(that.m_is_ok) {
         if (m_is_ok) {
-            val().T::~T();
+            new (valueptr()) T{that.value()};
         } else {
-            err().E::~E();
+            new (errorptr()) E{that.error()};
         }
     }
 
-    auto operator=(Result&& that) -> Result& {
+    ~Result() noexcept {
+        destroy();
+    }
+
+    auto operator=(Result&& that) noexcept(std::is_nothrow_move_assignable<T>::value && std::is_nothrow_move_assignable<E>::value) -> Result& {
         if (this != &that) {
-          if (m_is_ok) {
-              val().T::~T();
-          } else {
-              err().E::~E();
-          }
-
-          m_is_ok = that.m_is_ok;
-          if (that.m_is_ok) {
-              val() = std::move(that.val());
-          } else {
-              err() = std::move(that.err());
-          }
+            destroy();
+            m_is_ok = that.m_is_ok;
+            if (that.m_is_ok) {
+                value() = std::move(that.value());
+            } else {
+                error() = std::move(that.error());
+            }
         }
         return *this;
     }
 
-    auto operator=(T&& value) -> Result& {
-        if (m_is_ok) {
-            val().T::~T();
-        } else {
-            err().E::~E();
+    auto operator=(Result const& that) noexcept(std::is_nothrow_copy_assignable<T>::value && std::is_nothrow_copy_assignable<E>::value) -> Result& {
+        if (this != &that) {
+            destroy();
+            m_is_ok = that.m_is_ok;
+            if (that.m_is_ok) {
+                value() = that.value();
+            } else {
+                error() = that.error();
+            }
         }
+        return *this;
+    }
+
+    auto operator=(result::impl::Ok<T>&& value) noexcept(std::is_nothrow_move_assignable<T>::value) -> Result& {
+        destroy();
         m_is_ok = true;
-        val() = std::forward<T>(value);
+        value() = std::move(value.m_ok);
         return *this;
     }
 
-    auto operator==(Result const& that) const -> Bool {
-        if (m_is_ok && that.m_is_ok) {
-            return val_const() == that.val_const();
-        } else if (!m_is_ok && !that.m_is_ok) {
-            return err_const() == that.err_const();
-        }
+    auto operator=(result::impl::Ok<T> const& value) noexcept(std::is_nothrow_copy_assignable<T>::value) -> Result& {
+        destroy();
+        m_is_ok = true;
+        value() = value.m_ok;
+        return *this;
     }
 
-    auto is_ok() const -> Bool {
+    auto operator=(result::impl::Err<E>&& err) noexcept(std::is_nothrow_move_assignable<E>::value) -> Result& {
+        destroy();
+        m_is_ok = true;
+        value() = std::move(err.m_err);
+        return *this;
+    }
+
+    auto operator=(result::impl::Err<E> const& err) noexcept(std::is_nothrow_copy_assignable<E>::value) -> Result& {
+        destroy();
+        m_is_ok = true;
+        value() = err.m_err;
+        return *this;
+    }
+
+    auto operator==(Result const& that) const -> bool {
+        if (m_is_ok && that.m_is_ok) {
+            return value() == that.value();
+        } else if (!m_is_ok && !that.m_is_ok) {
+            return error() == that.error();
+        }
+        return false;
+    }
+
+    auto ok() -> Option<T>;
+    auto ok() const -> Option<T>;
+    auto err() -> Option<E>;
+    auto err() const -> Option<E>;
+
+    auto is_ok() const -> bool {
         return m_is_ok;
     }
 
-    auto is_err() const -> Bool {
+    auto is_err() const -> bool {
         return !m_is_ok;
     }
 
-    auto unwrap() -> T;
-
-    auto unwrap_err() -> E;
-
     template<typename F>
-    auto map(F&& op) -> Result<decltype(op(val())), E> {
+    auto map(F&& op) -> Result<typename invoke_result<typename std::decay<F>::type, T&&>::type, E> {
         if (is_ok()) {
-            return Ok(std::forward<typename std::decay<decltype(op(val()))>::type>(std::forward<F>(op)(val())));
+            return Ok(invoke(std::forward<F>(op), std::move(value())));
         } else {
-            return Err(std::move(err()));
+            return Err(std::move(error()));
         }
     }
+
+    template<typename F>
+    auto map(F&& op) const -> Result<typename invoke_result<typename std::decay<F>::type, T const&>::type, E> {
+        if (is_ok()) {
+            return Ok(invoke(std::forward<F>(op), std::move(value())));
+        } else {
+            return Err(std::move(error()));
+        }
+    }
+
+    template<typename F, typename M>
+    typename std::enable_if<
+        std::is_same<
+            typename std::decay<typename invoke_result<typename std::decay<F>::type, E&&>::type>::type,
+            typename std::decay<typename invoke_result<typename std::decay<M>::type, T&&>::type>::type
+        >::value,
+        typename std::decay<typename invoke_result<typename std::decay<F>::type>::type>::type
+    >::type
+    map_or_else(F&& fallback, M&& map_func) {
+        if (is_ok()) {
+            return invoke(std::forward<M>(map_func), std::move(value()));
+        } else {
+            return invoke(std::forward<F>(fallback), std::move(error()));
+        }
+    }
+
+    template<typename F, typename M>
+    typename std::enable_if<
+        std::is_same<
+            typename std::decay<typename invoke_result<typename std::decay<F>::type, E const&>::type>::type,
+            typename std::decay<typename invoke_result<typename std::decay<M>::type, T const&>::type>::type
+        >::value,
+        typename std::decay<typename invoke_result<typename std::decay<F>::type>::type>::type
+    >::type
+    map_or_else(F&& fallback, M&& map_func) const {
+        if (is_ok()) {
+            return invoke(std::forward<M>(map_func), value());
+        } else {
+            return invoke(std::forward<F>(fallback), error());
+        }
+    }
+
+    template<typename F, typename M>
+    typename std::enable_if<
+        std::is_same<
+            typename std::decay<typename invoke_result<typename std::decay<F>::type, E const&>::type>::type,
+            typename std::decay<typename invoke_result<typename std::decay<M>::type, T&&>::type>::type
+        >::value,
+        typename std::decay<typename invoke_result<typename std::decay<F>::type>::type>::type
+    >::type
+    map_or_else(F&& fallback, M&& map_func) {
+        if (is_ok()) {
+            return invoke(std::forward<M>(map_func), std::move(value()));
+        } else {
+            return invoke(std::forward<F>(fallback), error());
+        }
+    }
+
+    template<typename F, typename M>
+    typename std::enable_if<
+        std::is_same<
+            typename std::decay<typename invoke_result<typename std::decay<F>::type, E&&>::type>::type,
+            typename std::decay<typename invoke_result<typename std::decay<M>::type, T const&>::type>::type
+        >::value,
+        typename std::decay<typename invoke_result<typename std::decay<F>::type>::type>::type
+    >::type
+    map_or_else(F&& fallback, M&& map_func) {
+        if (is_ok()) {
+            return invoke(std::forward<M>(map_func), value());
+        } else {
+            return invoke(std::forward<F>(fallback), std::move(error()));
+        }
+    }
+
+    template<typename O>
+    auto map_err(O&& op) -> Result<T, typename invoke_result<typename std::decay<O>::type, E&&>::type> {
+        if (!is_ok()) {
+            return Err(invoke(std::forward<O>(op), error()));
+        } else {
+            return Ok(std::move(value()));
+        }
+    }
+
+    template<typename O>
+    auto map_err(O&& op) const -> Result<T, typename invoke_result<typename std::decay<O>::type, E const&>::type> {
+        if (!is_ok()) {
+            return Err(invoke(std::forward<O>(op), error()));
+        } else {
+            return Ok(std::move(value()));
+        }
+    }
+
+    template<typename U>
+    auto and_(Result<U, E> res) -> Result<U, E> {
+        if (res.is_ok()) {
+            return res;
+        } else {
+            return Err(std::move(error()));
+        }
+    }
+
+    template<typename U>
+    auto and_(Result<U, E> res) const -> Result<U, E> {
+        if (res.is_ok()) {
+            return res;
+        } else {
+            return Err(error());
+        }
+    }
+
+    template<typename F>
+    typename std::enable_if<
+        is_result_of_same_err_type<
+            Result<T, E>,
+            typename invoke_result<typename std::decay<F>::type, T&&>::type>::value,
+        typename invoke_result<typename std::decay<F>::type, T&&>::type
+    >::type
+    and_then(F&& op) {
+        if (is_ok()) {
+            return invoke(op, std::move(value()));
+        } else {
+            return Err(std::move(error()));
+        }
+    }
+
+    template<typename F>
+    typename std::enable_if<
+        is_result_of_same_err_type<
+            Result<T, E>,
+            typename invoke_result<typename std::decay<F>::type, T const&>::type>::value,
+        typename invoke_result<typename std::decay<F>::type, T const&>::type
+    >::type
+    and_then(F&& op) {
+        if (is_ok()) {
+            return invoke(op, value());
+        } else {
+            return Err(std::move(error()));
+        }
+    }
+
+    template<typename F>
+    typename std::enable_if<
+        is_result_of_same_err_type<
+            Result<T, E>,
+            typename invoke_result<typename std::decay<F>::type, T const&>::type>::value,
+        typename invoke_result<typename std::decay<F>::type, T const&>::type
+    >::type
+    and_then(F&& op) const {
+        if (is_ok()) {
+            return invoke(op, value());
+        } else {
+            return Err(error());
+        }
+    }
+
+    template<typename F>
+    auto or_(Result<T, F> res) -> Result<T, F> {
+        if (is_err()) {
+            return res;
+        } else {
+            return Ok(std::move(value()));
+        }
+    }
+
+    template<typename F>
+    auto or_(Result<T, F> res) const -> Result<T, F> {
+        if (is_err()) {
+            return res;
+        } else {
+            return Ok(value());
+        }
+    }
+
+    template<typename O>
+    typename std::enable_if<
+        is_result_of_same_value_type<
+            Result<T, E>,
+            typename invoke_result<typename std::decay<O>::type, E&&>::type>::value,
+        typename invoke_result<typename std::decay<O>::type, E&&>::type
+    >::type
+    or_else(O&& op) {
+        if (is_err()) {
+            return invoke(op, std::move(error()));
+        } else {
+            return Ok(std::move(value()));
+        }
+    }
+
+    template<typename O>
+    typename std::enable_if<
+        is_result_of_same_value_type<
+            Result<T, E>,
+            typename invoke_result<typename std::decay<O>::type, E const&>::type>::value,
+        typename invoke_result<typename std::decay<O>::type, E const&>::type
+    >::type
+    or_else(O&& op) {
+        if (is_err()) {
+            return invoke(op, error());
+        } else {
+            return Ok(std::move(value()));
+        }
+    }
+
+    template<typename O>
+    typename std::enable_if<
+        is_result_of_same_value_type<
+            Result<T, E>,
+            typename invoke_result<typename std::decay<O>::type, E const&>::type>::value,
+        typename invoke_result<typename std::decay<O>::type, E const&>::type
+    >::type
+    or_else(O&& op) const {
+        if (is_err()) {
+            return invoke(op, error());
+        } else {
+            return Ok(value());
+        }
+    }
+
+    auto unwrap_or(T optb) -> T {
+        if (is_ok()) {
+            return std::move(*this);
+        } else {
+            return optb;
+        }
+    }
+
+    auto unwrap_or(T optb) const -> T {
+        if (is_ok()) {
+            return std::move(*this);
+        } else {
+            return optb;
+        }
+    }
+
+    template<typename F>
+    auto unwrap_or_else(F&& op) -> T {
+        if (is_ok()) {
+            return std::move(*this);
+        } else {
+            return invoke(std::forward<F>(op), std::move(error()));
+        }
+    }
+
+    template<typename F>
+    auto unwrap_or_else(F&& op) const -> T {
+        if (is_ok()) {
+            return *this;
+        } else {
+            return invoke(std::forward<F>(op), error());
+        }
+    }
+
+    auto unwrap() -> T {
+        assert(is_ok());
+        return std::move(value());
+    }
+
+    auto unwrap() const -> T {
+        assert(is_ok());
+        return value();
+    }
+
+    auto expect(Str msg) -> T {
+        if (!is_ok()) {
+            std::fprintf(stderr, "%s\n", msg.as_bytes_const().as_const_ptr());
+            std::abort();
+        }
+        return std::move(value());
+    }
+
+    auto expect(Str msg) const -> T {
+        if (!is_ok()) {
+            std::fprintf(stderr, "%s\n", msg.as_bytes_const().as_const_ptr());
+            std::abort();
+        }
+        return value();
+    }
+
+    auto unwrap_err() -> E {
+        assert(is_err());
+        return std::move(error());
+    }
+
+    auto unwrap_err() const -> E {
+        assert(is_err());
+        return error();
+    }
+
+    auto expect_err(Str msg) -> E {
+        if (!is_err()) {
+            std::fprintf(stderr, "%s\n", msg.as_bytes_const().as_const_ptr());
+            std::abort();
+        }
+        return std::move(error());
+    }
+
+    auto expect_err(Str msg) const -> E {
+        if (!is_err()) {
+            std::fprintf(stderr, "%s\n", msg.as_bytes_const().as_const_ptr());
+            std::abort();
+        }
+        return std::move(error());
+    }
+
+    auto unwrap_or_default() -> T {
+        if (is_ok()) {
+            return std::move(value());
+        } else {
+            return T{};
+        }
+    }
+
+    auto unwrap_or_default() const -> T {
+        if (is_ok()) {
+            return value();
+        } else {
+            return T{};
+        }
+    }
+};
+
+template<class T, class E>
+class Result<T&&, E> {
+    static_assert(sizeof(T) == 0, "Result of rvalue references disallowed");
+};
+
+template<class T, class E>
+class Result<T, E&&> {
+    static_assert(sizeof(E) == 0, "Result of rvalue references disallowed");
 };
 
 template<typename T>
@@ -155,11 +601,11 @@ inline auto Err(E&& err) -> result::impl::Err<E> {
     return result::impl::Err<E> { std::forward<E>(err) };
 }
 
-#define RXX_RESULT_TRY(...) ({                                                                                      \
-    auto __res = __VA_ARGS__;                                                                                       \
-    if (__res.is_err())                                                                                             \
-        return Err(std::forward<typename std::remove_reference<decltype(__res.unwrap_err())>::type>(__res.unwrap_err()));    \
-    __res.unwrap();                                                                                                 \
+#define RXX_RESULT_TRY(...) ({              \
+    auto __res = __VA_ARGS__;               \
+    if (__res.is_err())                     \
+        return Err(__res.unwrap_err());     \
+    __res.unwrap();                         \
 })
 
 }

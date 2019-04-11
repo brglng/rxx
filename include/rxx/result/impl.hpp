@@ -2,21 +2,44 @@
 #define __RXX_RESULT_IMPL_HPP__
 
 #include "rxx/result/def.hpp"
-#include "rxx/panic/def.hpp"
-#include "rxx/macros.hpp"
+#include "rxx/option/def.hpp"
 
 namespace rxx {
 
 template<typename T, typename E>
-inline auto Result<T, E>::unwrap() -> T {
-    RXX_ASSERT(is_ok());
-    return std::move(val());
+auto Result<T, E>::ok() -> Option<T> {
+    if (is_ok()) {
+        return Some(std::move(value()));
+    } else {
+        return None;
+    }
 }
 
 template<typename T, typename E>
-inline auto Result<T, E>::unwrap_err() -> E {
-    RXX_ASSERT(!is_ok());
-    return std::move(err());
+auto Result<T, E>::ok() const -> Option<T> {
+    if (is_ok()) {
+        return Some(value());
+    } else {
+        return None;
+    }
+}
+
+template<typename T, typename E>
+auto Result<T, E>::err() -> Option<E> {
+    if (is_err()) {
+        return Some(std::move(error()));
+    } else {
+        return None;
+    }
+}
+
+template<typename T, typename E>
+auto Result<T, E>::err() const -> Option<E> {
+    if (is_err()) {
+        return Some(error());
+    } else {
+        return None;
+    }
 }
 
 }
