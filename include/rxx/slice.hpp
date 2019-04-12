@@ -44,7 +44,7 @@ public:
         return m_ptr;
     }
 
-    auto as_const_ptr() const -> T const* {
+    constexpr auto as_ptr() const -> T const* {
         return m_ptr;
     }
 
@@ -98,17 +98,8 @@ public:
     // auto split_first() -> Option<tuple<T&, slice<T&>> {
     // }
 
-    auto as_ptr() -> T const* {
+    auto as_ptr() const -> T const* {
         return m_ptr;
-    }
-
-    auto as_const_ptr() const -> T const* {
-        return m_ptr;
-    }
-
-    T const& operator[](size_t i) {
-        assert(i < m_len);
-        return m_ptr[i];
     }
 
 #ifdef NDEBUG

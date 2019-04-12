@@ -114,7 +114,9 @@ template<typename T, typename E> class Result<T, E&>;
 template<typename T, typename E> class Result<T&, E&>;
 template<typename T> class Option;
 template<typename T> class Option<T&>;
-template<typename T> inline auto Some(T&& value) -> Option<T>;
+
+template<typename T>
+inline auto Some(T&& value) -> Option<typename std::decay<T>::type>;
 
 template<typename T>
 class Option : private option::impl::Base<T> {
@@ -245,7 +247,7 @@ public:
 
     auto expect(Str msg) noexcept -> T {
         if (!inited()) {
-            std::fprintf(stderr, "%s\n", msg.as_bytes_const().as_const_ptr());
+            std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
         return std::move(val());
@@ -253,7 +255,7 @@ public:
 
     auto expect(Str msg) const noexcept -> T {
         if (!inited()) {
-            std::fprintf(stderr, "%s\n", msg.as_bytes_const().as_const_ptr());
+            std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
         return val();
@@ -625,7 +627,7 @@ public:
 
     auto expect(Str msg) noexcept -> T& {
         if (!inited()) {
-            std::fprintf(stderr, "%s\n", msg.as_bytes_const().as_const_ptr());
+            std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
         return std::move(val());
@@ -633,7 +635,7 @@ public:
 
     auto expect(Str msg) const noexcept -> T const& {
         if (!inited()) {
-            std::fprintf(stderr, "%s\n", msg.as_bytes_const().as_const_ptr());
+            std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
         return val();
@@ -1226,8 +1228,8 @@ template <class T> constexpr bool operator>=(const T& v, const Option<const T&>&
 }
 
 template<typename T>
-inline auto Some(T&& value) -> Option<T> {
-    return Option<T> { std::forward<T>(value) };
+inline auto Some(T&& value) -> Option<typename std::decay<T>::type> {
+    return Option<typename std::decay<T>::type>{std::forward<typename std::decay<T>::type>(value)};
 }
 
 }

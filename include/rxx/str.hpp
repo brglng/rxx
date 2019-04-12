@@ -29,11 +29,15 @@ public:
 
     // }
 
+    constexpr const char* c_str() const {
+        return (const char*)m_bytes.as_ptr();
+    }
+
     auto as_bytes() noexcept -> Slice<uint8_t> {
         return m_bytes;
     }
 
-    constexpr auto as_bytes_const() const noexcept -> Slice<uint8_t> {
+    constexpr auto as_bytes() const noexcept -> Slice<uint8_t> {
         return m_bytes;
     }
 
@@ -63,7 +67,7 @@ public:
 
     explicit constexpr Str(const char* s, size_t len) noexcept : m_bytes{(uint8_t const*)s, len} {}
 
-    constexpr Str(MutStr s) noexcept : m_bytes{s.as_bytes_const().as_const_ptr(), s.len()} {}
+    constexpr Str(const MutStr s) noexcept : m_bytes{s.as_bytes().as_ptr(), s.len()} {}
 
     constexpr auto len() const -> size_t {
         return m_bytes.len();
@@ -73,11 +77,11 @@ public:
         return m_bytes.is_empty();
     }
 
-    constexpr auto as_bytes() const -> Slice<const uint8_t> {
-        return m_bytes;
+    constexpr const char* c_str() const {
+        return (const char*)m_bytes.as_ptr();
     }
 
-    constexpr auto as_bytes_const() const -> Slice<const uint8_t> {
+    constexpr auto as_bytes() const -> Slice<const uint8_t> {
         return m_bytes;
     }
 

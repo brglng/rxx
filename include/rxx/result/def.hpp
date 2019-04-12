@@ -20,10 +20,14 @@ struct Ok {
     T m_ok;
 };
 
+template<> struct Ok<void> {};
+
 template<typename E>
 struct Err {
     E m_err;
 };
+
+template<> struct Err<void> {};
 
 }
 }
@@ -36,10 +40,10 @@ template<typename T> class Option;
 template<typename T> class Option<T&>;
 
 template<typename T>
-inline auto Ok(T&& value) -> result::impl::Ok<T>;
+inline auto Ok(T&& value) -> result::impl::Ok<typename std::decay<T>::type>;
 
 template<typename E>
-inline auto Err(E&& error) -> result::impl::Err<E>;
+inline auto Err(E&& err) -> result::impl::Err<typename std::decay<E>::type>;
 
 namespace result {
 namespace impl {
@@ -302,38 +306,6 @@ public:
         }
     }
 
-    template<typename F, typename M>
-    typename std::enable_if<
-        std::is_same<
-            typename std::decay<typename invoke_result<typename std::decay<F>::type, E const&>::type>::type,
-            typename std::decay<typename invoke_result<typename std::decay<M>::type, T&&>::type>::type
-        >::value,
-        typename std::decay<typename invoke_result<typename std::decay<F>::type>::type>::type
-    >::type
-    map_or_else(F&& fallback, M&& map_func) {
-        if (is_ok()) {
-            return invoke(std::forward<M>(map_func), std::move(value()));
-        } else {
-            return invoke(std::forward<F>(fallback), error());
-        }
-    }
-
-    template<typename F, typename M>
-    typename std::enable_if<
-        std::is_same<
-            typename std::decay<typename invoke_result<typename std::decay<F>::type, E&&>::type>::type,
-            typename std::decay<typename invoke_result<typename std::decay<M>::type, T const&>::type>::type
-        >::value,
-        typename std::decay<typename invoke_result<typename std::decay<F>::type>::type>::type
-    >::type
-    map_or_else(F&& fallback, M&& map_func) {
-        if (is_ok()) {
-            return invoke(std::forward<M>(map_func), value());
-        } else {
-            return invoke(std::forward<F>(fallback), std::move(error()));
-        }
-    }
-
     template<typename O>
     auto map_err(O&& op) -> Result<T, typename invoke_result<typename std::decay<O>::type, E&&>::type> {
         if (!is_ok()) {
@@ -380,21 +352,6 @@ public:
     and_then(F&& op) {
         if (is_ok()) {
             return invoke(op, std::move(value()));
-        } else {
-            return Err(std::move(error()));
-        }
-    }
-
-    template<typename F>
-    typename std::enable_if<
-        is_result_of_same_err_type<
-            Result<T, E>,
-            typename invoke_result<typename std::decay<F>::type, T const&>::type>::value,
-        typename invoke_result<typename std::decay<F>::type, T const&>::type
-    >::type
-    and_then(F&& op) {
-        if (is_ok()) {
-            return invoke(op, value());
         } else {
             return Err(std::move(error()));
         }
@@ -524,7 +481,7 @@ public:
 
     auto expect(Str msg) -> T {
         if (!is_ok()) {
-            std::fprintf(stderr, "%s\n", msg.as_bytes_const().as_const_ptr());
+            std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
         return std::move(value());
@@ -532,7 +489,7 @@ public:
 
     auto expect(Str msg) const -> T {
         if (!is_ok()) {
-            std::fprintf(stderr, "%s\n", msg.as_bytes_const().as_const_ptr());
+            std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
         return value();
@@ -550,7 +507,7 @@ public:
 
     auto expect_err(Str msg) -> E {
         if (!is_err()) {
-            std::fprintf(stderr, "%s\n", msg.as_bytes_const().as_const_ptr());
+            std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
         return std::move(error());
@@ -558,7 +515,7 @@ public:
 
     auto expect_err(Str msg) const -> E {
         if (!is_err()) {
-            std::fprintf(stderr, "%s\n", msg.as_bytes_const().as_const_ptr());
+            std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
         return std::move(error());
@@ -592,13 +549,13 @@ class Result<T, E&&> {
 };
 
 template<typename T>
-inline auto Ok(T&& value) -> result::impl::Ok<T> {
-    return result::impl::Ok<T> { std::forward<T>(value) };
+inline auto Ok(T&& value) -> result::impl::Ok<typename std::decay<T>::type> {
+    return result::impl::Ok<typename std::decay<T>::type>(std::forward<typename std::decay<T>::type>(value));
 }
 
 template<typename E>
-inline auto Err(E&& err) -> result::impl::Err<E> {
-    return result::impl::Err<E> { std::forward<E>(err) };
+inline auto Err(E&& err) -> result::impl::Err<typename std::decay<E>::type> {
+    return result::impl::Err<typename std::decay<E>::type>{std::forward<typename std::decay<E>::type>(err)};
 }
 
 #define RXX_RESULT_TRY(...) ({              \
