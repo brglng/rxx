@@ -7,6 +7,7 @@
 #include "rxx/type_traits.hpp"
 #include "rxx/utility.hpp"
 #include "rxx/str.hpp"
+#include "rxx/unit.hpp"
 
 namespace rxx {
 
@@ -114,9 +115,18 @@ template<typename T, typename E> class Result<T, E&>;
 template<typename T, typename E> class Result<T&, E&>;
 template<typename T> class Option;
 template<typename T> class Option<T&>;
+template<> class Option<void>;
 
 template<typename T>
 inline auto Some(T&& value) -> Option<typename std::decay<T>::type>;
+
+inline auto Some() -> Option<void>;
+
+template<typename T> struct is_option : std::false_type {};
+template<typename T> struct is_option<Option<T>> : std::true_type {};
+
+template<typename O1, typename O2> struct is_same_option : std::false_type {};
+template<typename T1, typename T2> struct is_same_option<Option<T1>, Option<T2>> : std::true_type {};
 
 template<typename T>
 class Option : private option::impl::Base<T> {
@@ -573,6 +583,253 @@ public:
     friend constexpr bool operator<=(const Option<T>& x, const T& v);
     friend constexpr bool operator>=(const T& v, const Option<T>& x);
 };
+
+template<>
+class Option<void> {
+    bool m_inited;
+
+    constexpr bool inited() const noexcept {
+        return m_inited;
+    }
+
+    void set_inited(bool inited) noexcept {
+        m_inited = inited;
+    }
+
+    void init() noexcept {
+        assert(!inited());
+        set_inited(true);
+    }
+
+    void clear() noexcept {
+        if (inited()) {
+            set_inited(false);
+        }
+    }
+
+public:
+    constexpr Option() noexcept : m_inited{false} {}
+    constexpr Option(option::impl::None) noexcept : m_inited{false} {}
+
+    Option(Option const& that) noexcept {
+        if (that.inited()) {
+            set_inited(true);
+        }
+    }
+
+    Option(Option&& that) noexcept {
+        if (that.inited()) {
+            set_inited(true);
+        }
+    }
+
+    explicit constexpr Option(Unit) noexcept : m_inited{true} {}
+
+    explicit constexpr Option(InPlace) : m_inited{true} {}
+
+    ~Option() = default;
+
+    auto operator=(option::impl::None) noexcept -> Option& {
+        clear();
+        return *this;
+    }
+
+    auto operator=(Option const& that) noexcept -> Option& {
+        m_inited = that.m_inited;
+        return *this;
+    }
+
+    auto operator=(Option&& that) -> Option& {
+        m_inited = that.m_inited;
+        return *this;
+    }
+
+    explicit constexpr operator bool() const noexcept { return inited(); }
+    
+    constexpr auto is_some() const noexcept -> bool {
+        return inited();
+    }
+
+    constexpr auto is_none() const noexcept -> bool {
+        return !inited();
+    }
+
+    void expect(Str msg) const noexcept {
+        if (!inited()) {
+            std::fprintf(stderr, "%s\n", msg.c_str());
+            std::abort();
+        }
+    }
+
+    void unwrap() const {
+        assert(inited());
+    }
+
+    void unwrap_or() const noexcept {}
+
+    template<typename F>
+    void unwrap_or_else(F&& f) const {
+        if (!inited()) {
+            return invoke(std::forward<F>(f));
+        }
+    }
+
+    template<typename F>
+    auto map(F&& f) const -> Option<typename invoke_result<typename std::decay<F>::type>::type> {
+        if (inited()) {
+            return Some(invoke(std::forward<F>(f)));
+        } else {
+            return None;
+        }
+    }
+
+    template<typename U, typename F>
+    auto map_or(U&& def, F&& f) const noexcept -> U {
+        if (inited()) {
+            return invoke(std::forward<F>(f));
+        } else {
+            return std::forward<U>(def);
+        }
+    }
+
+    template<typename D, typename F>
+    typename std::enable_if<
+        std::is_same<
+            typename std::decay<typename invoke_result<typename std::decay<D>::type>::type>::type,
+            typename std::decay<typename invoke_result<typename std::decay<F>::type>::type>::type
+        >::value,
+        typename std::decay<typename invoke_result<typename std::decay<D>::type>::type>::type
+    >::type
+    map_or_else(D&& def, F&& f) const {
+        if (inited()) {
+            return invoke(std::forward<F>(f));
+        } else {
+            return invoke(std::forward<D>(def));
+        }
+    }
+
+    template<typename E>
+    auto ok_or(E&& err) noexcept -> Result<void, E>;
+
+    template<typename E>
+    auto ok_or(E&& err) const noexcept -> Result<void, E>;
+
+    template<typename F>
+    auto ok_or_else(F&& err) -> Result<void, typename invoke_result<typename std::decay<F>::type>::type>;
+
+    template<typename F>
+    auto ok_or_else(F&& err) const -> Result<void, typename invoke_result<typename std::decay<F>::type>::type>;
+
+    template<typename U>
+    auto and_(Option<U> optb) const -> Option<U> {
+        if (!inited()) return None;
+        else return optb;
+    }
+
+    template<typename F>
+    auto and_then(F&& f) const -> Option<typename invoke_result<typename std::decay<F>::type>::type> {
+        if (!inited()) return None;
+        else return invoke(std::forward<F>(f));
+    }
+
+    template<typename P>
+    auto filter(P&& predicate) -> Option<void> {
+        if (!inited()) {
+            return None;
+        } else {
+            if (invoke(std::forward<P>(predicate))) {
+                return std::move(*this);
+            } else {
+                return None;
+            }
+        }
+    }
+
+    template<typename P>
+    auto filter(P&& predicate) const -> Option<void> {
+        if (!inited()) {
+            return None;
+        } else {
+            if (invoke(std::forward<P>(predicate))) {
+                return *this;
+            } else {
+                return None;
+            }
+        }
+    }
+
+    auto or_(Option<void> optb) const -> Option<void> {
+        if (inited()) {
+            return *this;
+        } else {
+            return optb;
+        }
+    }
+
+    template<typename F>
+    auto or_else(F&& f) const -> Option<void> {
+        if (inited()) {
+            return *this;
+        } else {
+            return invoke(std::forward<F>(f));
+        }
+    }
+
+    auto xor_(Option<void> optb) const -> Option<void> {
+        if (inited() && !optb.inited()) {
+            return *this;
+        } else if (!inited() && optb.inited()) {
+            return optb;
+        } else {
+            return None;
+        }
+    }
+
+    void get_or_insert() {
+        if (!inited()) {
+            init();
+        }
+    }
+
+    template<class F>
+    void get_or_insert_with(F&& f) {
+        if (!inited()) {
+            invoke(std::forward<F>(f));
+            init();
+        }
+    }
+
+    auto take() -> Option<void> {
+        if (inited()) {
+            set_inited(false);
+            return Some();
+        } else {
+            return None;
+        }
+    }
+
+    auto replace() -> Option<void> {
+        if (inited()) {
+            return Some();
+        } else {
+            init();
+            return None;
+        }
+    }
+
+    void unwrap_or_default() const {}
+
+    friend constexpr bool operator==(const Option<void>& x, const Option<void>& y);
+    friend constexpr bool operator<(const Option<void>& x, const Option<void>& y);
+};
+
+constexpr bool operator==(const Option<void>& x, const Option<void>& y) {
+    return x.inited() == y.inited();
+}
+
+constexpr bool operator<(const Option<void>& x, const Option<void>& y) {
+    return (!y) ? false : (!x) ? true : false;
+}
 
 template<typename T>
 class Option<T&> {
@@ -1229,7 +1486,11 @@ template <class T> constexpr bool operator>=(const T& v, const Option<const T&>&
 
 template<typename T>
 inline auto Some(T&& value) -> Option<typename std::decay<T>::type> {
-    return Option<typename std::decay<T>::type>{std::forward<typename std::decay<T>::type>(value)};
+    return Option<typename std::decay<T>::type>{static_forward<typename std::decay<T>::type>(value)};
+}
+
+inline auto Some() -> Option<void> {
+    return Option<void>();
 }
 
 }
