@@ -3,10 +3,13 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <string>
 #include "rxx/slice.hpp"
 
 namespace rxx {
+
+class Str;
 
 class MutStr {
     Slice<uint8_t> m_bytes;
@@ -42,6 +45,14 @@ public:
     }
 
     uint8_t& operator[](size_t i) { return m_bytes[i]; }
+
+    bool operator==(MutStr const& rhs) const {
+        if (len() != rhs.len()) {
+            return false;
+        }
+
+        return std::strncmp(c_str(), rhs.c_str(), len()) == 0;
+    }
 
 #ifdef NDEBUG
     constexpr uint8_t const& operator[](size_t i) const { return m_bytes[i]; }
@@ -87,12 +98,33 @@ public:
 
     uint8_t const& operator[](size_t i) { return m_bytes[i]; }
 
+    bool operator==(Str const& rhs) const {
+        if (len() != rhs.len())
+            return false;
+
+        return std::strncmp(c_str(), rhs.c_str(), len()) == 0;
+    }
+
+    bool operator==(MutStr const& rhs) const {
+        if (len() != rhs.len())
+            return false;
+
+        return std::strncmp(c_str(), rhs.c_str(), len()) == 0;
+    }
+
 #ifdef NDEBUG
     constexpr uint8_t const& operator[](size_t i) const { return m_bytes[i]; }
 #else
     uint8_t const& operator[](size_t i) const { return m_bytes[i]; }
 #endif
 };
+
+inline bool operator==(MutStr const& lhs, Str const& rhs) {
+    if (lhs.len() != rhs.len())
+        return false;
+
+    return std::strncmp(lhs.c_str(), rhs.c_str(), lhs.len());
+}
 
 template<std::size_t N>
 constexpr auto str(const char (&s)[N]) -> Str {
@@ -102,6 +134,14 @@ constexpr auto str(const char (&s)[N]) -> Str {
 template<std::size_t N>
 constexpr auto str(char (&s)[N]) -> Str {
     return MutStr{s};
+}
+
+auto str(const char* s) -> Str {
+    return Str(s, std::strlen(s));
+}
+
+auto str(char* s) -> MutStr {
+    return MutStr(s, std::strlen(s));
 }
 
 Str str(std::string const& s) {
