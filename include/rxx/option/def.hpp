@@ -1490,7 +1490,7 @@ inline auto Some(T&& value) -> Option<typename std::decay<T>::type> {
 }
 
 inline auto Some() -> Option<void> {
-    return Option<void>();
+    return Option<void>(Unit());
 }
 
 }
