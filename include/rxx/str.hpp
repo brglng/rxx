@@ -68,12 +68,12 @@ class Str {
 public:
     template<std::size_t N>
     constexpr Str(const char (&s)[N]) noexcept :
-        m_bytes { static_cast<const unsigned char (&)[N]>(s) }
+        m_bytes { (const unsigned char (&)[N])(s) }
     {}
 
     template<std::size_t N>
     constexpr Str(char (&s)[N]) noexcept :
-        m_bytes { static_cast<const unsigned char (&)[N]>(s) }
+        m_bytes { (const unsigned char (&)[N])(s) }
     {}
 
     explicit constexpr Str(const char* s, size_t len) noexcept : m_bytes{(uint8_t const*)s, len} {}

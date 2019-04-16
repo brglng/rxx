@@ -7,77 +7,12 @@
 #include <algorithm>
 #include <cassert>
 #include "rxx/invoke.hpp"
+#include "rxx/option/proto.hpp"
+#include "rxx/result/proto.hpp"
 #include "rxx/str.hpp"
 #include "rxx/utility.hpp"
 
 namespace rxx {
-
-namespace result {
-namespace impl {
-
-template<typename T>
-struct Ok {
-    T m_ok;
-};
-
-template<> struct Ok<void> { constexpr Ok() {} };
-
-template<typename E>
-struct Err {
-    E m_err;
-};
-
-template<> struct Err<void> { constexpr Err() {} };
-
-}
-}
-
-template<typename T, typename E>
-class Result;
-
-template<typename E>
-class Result<void, E>;
-
-template<typename T, typename E>
-class Result<T&, E>;
-
-template<typename T, typename E>
-class Result<T, E&>;
-
-template<typename E>
-class Result<void, E&>;
-
-template<typename T, typename E>
-class Result<T&, E&>;
-
-template<typename T>
-class Option;
-
-template<>
-class Option<void>;
-
-template<typename T>
-class Option<T&>;
-
-template<typename T>
-inline auto Ok(T&& value) -> result::impl::Ok<typename std::decay<T>::type>;
-
-inline auto Ok() -> result::impl::Ok<void> { return result::impl::Ok<void>(); }
-
-template<typename E>
-inline auto Err(E&& err) -> result::impl::Err<typename std::decay<E>::type>;
-
-template<typename T> struct is_result : std::false_type {};
-template<typename T, typename E> struct is_result<Result<T, E>> : std::true_type {};
-
-template<typename R1, typename R2> struct is_same_result : std::false_type {};
-template<typename T, typename E> struct is_same_result<Result<T, E>, Result<T, E>> : std::true_type {};
-
-template<typename R1, typename R2> struct is_result_of_same_err_type : std::false_type {};
-template<typename T, typename U, typename E> struct is_result_of_same_err_type<Result<T, E>, Result<U, E>> : std::true_type {};
-
-template<typename R1, typename R2> struct is_result_of_same_value_type : std::false_type {};
-template<typename T, typename E1, typename E2> struct is_result_of_same_value_type<Result<T, E1>, Result<T, E2>> : std::true_type {};
 
 template<typename T, typename E>
 class Result {
@@ -154,22 +89,22 @@ public:
         new (errorptr()) E{err};
     }
 
-    Result(result::impl::Ok<T>&& value) noexcept(std::is_nothrow_move_constructible<T>::value)
+    Result(result::Ok<T>&& value) noexcept(std::is_nothrow_move_constructible<T>::value)
         : m_is_ok(true) {
         new (valueptr()) T{std::move(value.m_ok)};
     }
 
-    Result(result::impl::Err<E>&& err) noexcept(std::is_nothrow_move_constructible<E>::value)
+    Result(result::Err<E>&& err) noexcept(std::is_nothrow_move_constructible<E>::value)
         : m_is_ok(false) {
         new (errorptr()) E{std::move(err.m_err)};
     }
 
-    Result(result::impl::Ok<T> const& value) noexcept(std::is_nothrow_copy_constructible<T>::value)
+    Result(result::Ok<T> const& value) noexcept(std::is_nothrow_copy_constructible<T>::value)
         : m_is_ok(true) {
         new (valueptr()) T{value.m_ok};
     }
 
-    Result(result::impl::Err<E> const& err) noexcept(std::is_nothrow_copy_constructible<E>::value)
+    Result(result::Err<E> const& err) noexcept(std::is_nothrow_copy_constructible<E>::value)
         : m_is_ok(false) {
         new (errorptr()) E{err.m_err};
     }
@@ -222,28 +157,28 @@ public:
         return *this;
     }
 
-    auto operator=(result::impl::Ok<T>&& value) noexcept(std::is_nothrow_move_assignable<T>::value) -> Result& {
+    auto operator=(result::Ok<T>&& value) noexcept(std::is_nothrow_move_assignable<T>::value) -> Result& {
         destroy();
         m_is_ok = true;
         value() = std::move(value.m_ok);
         return *this;
     }
 
-    auto operator=(result::impl::Ok<T> const& value) noexcept(std::is_nothrow_copy_assignable<T>::value) -> Result& {
+    auto operator=(result::Ok<T> const& value) noexcept(std::is_nothrow_copy_assignable<T>::value) -> Result& {
         destroy();
         m_is_ok = true;
         value() = value.m_ok;
         return *this;
     }
 
-    auto operator=(result::impl::Err<E>&& err) noexcept(std::is_nothrow_move_assignable<E>::value) -> Result& {
+    auto operator=(result::Err<E>&& err) noexcept(std::is_nothrow_move_assignable<E>::value) -> Result& {
         destroy();
         m_is_ok = true;
         error() = std::move(err.m_err);
         return *this;
     }
 
-    auto operator=(result::impl::Err<E> const& err) noexcept(std::is_nothrow_copy_assignable<E>::value) -> Result& {
+    auto operator=(result::Err<E> const& err) noexcept(std::is_nothrow_copy_assignable<E>::value) -> Result& {
         destroy();
         m_is_ok = true;
         error() = err.m_err;
@@ -258,6 +193,8 @@ public:
         }
         return false;
     }
+
+    explicit operator bool() const { return m_is_ok; }
 
     auto ok() -> Option<T>;
     auto ok() const -> Option<T>;
@@ -599,17 +536,17 @@ public:
         new (errorptr()) E{err};
     }
 
-    Result(result::impl::Ok<void>&&) noexcept : m_is_ok(true) {}
+    Result(result::Ok<void>&&) noexcept : m_is_ok(true) {}
 
-    Result(result::impl::Err<E>&& err)
+    Result(result::Err<E>&& err)
         noexcept(std::is_nothrow_move_constructible<E>::value)
         : m_is_ok(false) {
         new (errorptr()) E{std::move(err.m_err)};
     }
 
-    Result(result::impl::Ok<void> const&) : m_is_ok(true) {}
+    Result(result::Ok<void> const&) : m_is_ok(true) {}
 
-    Result(result::impl::Err<E> const& err) noexcept(std::is_nothrow_copy_constructible<E>::value)
+    Result(result::Err<E> const& err) noexcept(std::is_nothrow_copy_constructible<E>::value)
         : m_is_ok(false) {
         new (errorptr()) E{err.m_err};
     }
@@ -654,26 +591,26 @@ public:
         return *this;
     }
 
-    auto operator=(result::impl::Ok<void>&&) noexcept -> Result& {
+    auto operator=(result::Ok<void>&&) noexcept -> Result& {
         destroy();
         m_is_ok = true;
         return *this;
     }
 
-    auto operator=(result::impl::Ok<void> const&) noexcept -> Result& {
+    auto operator=(result::Ok<void> const&) noexcept -> Result& {
         destroy();
         m_is_ok = true;
         return *this;
     }
 
-    auto operator=(result::impl::Err<E>&& err) noexcept(std::is_nothrow_move_assignable<E>::value) -> Result& {
+    auto operator=(result::Err<E>&& err) noexcept(std::is_nothrow_move_assignable<E>::value) -> Result& {
         destroy();
         m_is_ok = true;
         error() = std::move(err.m_err);
         return *this;
     }
 
-    auto operator=(result::impl::Err<E> const& err) noexcept(std::is_nothrow_copy_assignable<E>::value) -> Result& {
+    auto operator=(result::Err<E> const& err) noexcept(std::is_nothrow_copy_assignable<E>::value) -> Result& {
         destroy();
         m_is_ok = true;
         error() = err.m_err;
@@ -686,6 +623,8 @@ public:
         }
         return false;
     }
+
+    explicit operator bool() const { return m_is_ok; }
 
     auto ok() -> Option<void>;
     auto ok() const -> Option<void>;
@@ -951,13 +890,13 @@ class Result<T&&, E&&> {
 };
 
 template<typename T>
-inline auto Ok(T&& value) -> result::impl::Ok<typename std::decay<T>::type> {
-    return result::impl::Ok<typename std::decay<T>::type>(std::forward<typename std::decay<T>::type>(value));
+inline auto Ok(T&& value) -> result::Ok<typename std::decay<T>::type> {
+    return result::Ok<typename std::decay<T>::type>(std::forward<typename std::decay<T>::type>(value));
 }
 
 template<typename E>
-inline auto Err(E&& err) -> result::impl::Err<typename std::decay<E>::type> {
-    return result::impl::Err<typename std::decay<E>::type>{std::forward<typename std::decay<E>::type>(err)};
+inline auto Err(E&& err) -> result::Err<typename std::decay<E>::type> {
+    return result::Err<typename std::decay<E>::type>{std::forward<typename std::decay<E>::type>(err)};
 }
 
 #define RXX_RESULT_TRY(...) ({              \

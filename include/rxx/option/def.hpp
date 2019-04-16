@@ -8,16 +8,13 @@
 #include "rxx/utility.hpp"
 #include "rxx/str.hpp"
 #include "rxx/unit.hpp"
+#include "rxx/option/proto.hpp"
+#include "rxx/result/proto.hpp"
 
 namespace rxx {
 
 namespace option {
 namespace impl {
-
-struct None {
-    struct init {};
-    explicit constexpr None(init) {}
-};
 
 constexpr struct TrivialInit {} trivial_init {};
 
@@ -34,7 +31,6 @@ union Storage
 
     ~Storage(){}
 };
-
 
 template<class T>
 union ConstExprStorage
@@ -107,30 +103,9 @@ using Base = typename std::conditional<
 }
 }
 
-constexpr option::impl::None None{option::impl::None::init {}};
-
-template<typename T, typename E> class Result;
-template<typename T, typename E> class Result<T&, E>;
-template<typename T, typename E> class Result<T, E&>;
-template<typename T, typename E> class Result<T&, E&>;
-template<typename T> class Option;
-template<typename T> class Option<T&>;
-template<> class Option<void>;
-
-template<typename T>
-inline auto Some(T&& value) -> Option<typename std::decay<T>::type>;
-
-inline auto Some() -> Option<void>;
-
-template<typename T> struct is_option : std::false_type {};
-template<typename T> struct is_option<Option<T>> : std::true_type {};
-
-template<typename O1, typename O2> struct is_same_option : std::false_type {};
-template<typename T1, typename T2> struct is_same_option<Option<T1>, Option<T2>> : std::true_type {};
-
 template<typename T>
 class Option : private option::impl::Base<T> {
-    static_assert( !std::is_same<typename std::decay<T>::type, option::impl::None>::value, "bad T" );
+    static_assert( !std::is_same<typename std::decay<T>::type, option::None>::value, "bad T" );
     static_assert( !std::is_same<typename std::decay<T>::type, InPlace>::value, "bad T" );
 
     constexpr bool inited() const noexcept {
@@ -184,7 +159,7 @@ class Option : private option::impl::Base<T> {
 
 public:
     constexpr Option() noexcept : option::impl::Base<T>{} {}
-    constexpr Option(option::impl::None) noexcept : option::impl::Base<T>{} {}
+    constexpr Option(option::None) noexcept : option::impl::Base<T>{} {}
 
     Option(Option const& that) noexcept(std::is_nothrow_copy_constructible<T>::value)
         : option::impl::Base<T>{} {
@@ -218,7 +193,7 @@ public:
 
     ~Option() = default;
 
-    auto operator=(option::impl::None) noexcept -> Option& {
+    auto operator=(option::None) noexcept -> Option& {
         clear();
         return *this;
     }
@@ -350,7 +325,7 @@ public:
     }
 
     template<typename U, typename F>
-    auto map_or(U&& def, F&& f) noexcept -> U {
+    auto map_or(U&& def, F&& f) -> U {
         if (inited()) {
             return invoke(std::forward<F>(f), std::move(val()));
         } else {
@@ -359,7 +334,7 @@ public:
     }
 
     template<typename U, typename F>
-    auto map_or(U&& def, F&& f) const noexcept -> U {
+    auto map_or(U&& def, F&& f) const -> U {
         if (inited()) {
             return invoke(std::forward<F>(f), val());
         } else {
@@ -609,7 +584,7 @@ class Option<void> {
 
 public:
     constexpr Option() noexcept : m_inited{false} {}
-    constexpr Option(option::impl::None) noexcept : m_inited{false} {}
+    constexpr Option(option::None) noexcept : m_inited{false} {}
 
     Option(Option const& that) noexcept {
         if (that.inited()) {
@@ -629,7 +604,7 @@ public:
 
     ~Option() = default;
 
-    auto operator=(option::impl::None) noexcept -> Option& {
+    auto operator=(option::None) noexcept -> Option& {
         clear();
         return *this;
     }
@@ -833,7 +808,7 @@ constexpr bool operator<(const Option<void>& x, const Option<void>& y) {
 
 template<typename T>
 class Option<T&> {
-    static_assert(!std::is_same<T, option::impl::None>::value, "bad T" );
+    static_assert(!std::is_same<T, option::None>::value, "bad T" );
     static_assert(!std::is_same<T, InPlace>::value, "bad T" );
 
     T* m_ptr;
@@ -845,7 +820,7 @@ class Option<T&> {
 public:
     constexpr Option() noexcept  : m_ptr{nullptr} {}
 
-    constexpr Option(option::impl::None) noexcept : m_ptr{nullptr} {}
+    constexpr Option(option::None) noexcept : m_ptr{nullptr} {}
 
     explicit constexpr Option(T& t) noexcept : m_ptr{static_addressof(t)} {}
 
@@ -864,7 +839,7 @@ public:
         return *this;
     }
 
-    auto operator=(option::impl::None) noexcept -> Option& {
+    auto operator=(option::None) noexcept -> Option& {
         m_ptr = nullptr;
         return *this;
     }
@@ -1241,62 +1216,62 @@ template <class T> constexpr bool operator>=(const Option<T>& x, const Option<T>
 }
 
 // Comparison with nullopt
-template <class T> constexpr bool operator==(const Option<T>& x, option::impl::None) noexcept
+template <class T> constexpr bool operator==(const Option<T>& x, option::None) noexcept
 {
     return (!x);
 }
 
-template <class T> constexpr bool operator==(option::impl::None, const Option<T>& x) noexcept
+template <class T> constexpr bool operator==(option::None, const Option<T>& x) noexcept
 {
     return (!x);
 }
 
-template <class T> constexpr bool operator!=(const Option<T>& x, option::impl::None) noexcept
+template <class T> constexpr bool operator!=(const Option<T>& x, option::None) noexcept
 {
     return bool(x);
 }
 
-template <class T> constexpr bool operator!=(option::impl::None, const Option<T>& x) noexcept
+template <class T> constexpr bool operator!=(option::None, const Option<T>& x) noexcept
 {
     return bool(x);
 }
 
-template <class T> constexpr bool operator<(const Option<T>&, option::impl::None) noexcept
+template <class T> constexpr bool operator<(const Option<T>&, option::None) noexcept
 {
     return false;
 }
 
-template <class T> constexpr bool operator<(option::impl::None, const Option<T>& x) noexcept
+template <class T> constexpr bool operator<(option::None, const Option<T>& x) noexcept
 {
     return bool(x);
 }
 
-template <class T> constexpr bool operator<=(const Option<T>& x, option::impl::None) noexcept
+template <class T> constexpr bool operator<=(const Option<T>& x, option::None) noexcept
 {
     return (!x);
 }
 
-template <class T> constexpr bool operator<=(option::impl::None, const Option<T>&) noexcept
+template <class T> constexpr bool operator<=(option::None, const Option<T>&) noexcept
 {
     return true;
 }
 
-template <class T> constexpr bool operator>(const Option<T>& x, option::impl::None) noexcept
+template <class T> constexpr bool operator>(const Option<T>& x, option::None) noexcept
 {
     return bool(x);
 }
 
-template <class T> constexpr bool operator>(option::impl::None, const Option<T>&) noexcept
+template <class T> constexpr bool operator>(option::None, const Option<T>&) noexcept
 {
     return false;
 }
 
-template <class T> constexpr bool operator>=(const Option<T>&, option::impl::None) noexcept
+template <class T> constexpr bool operator>=(const Option<T>&, option::None) noexcept
 {
     return true;
 }
 
-template <class T> constexpr bool operator>=(option::impl::None, const Option<T>& x) noexcept
+template <class T> constexpr bool operator>=(option::None, const Option<T>& x) noexcept
 {
     return (!x);
 }
