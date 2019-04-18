@@ -2,6 +2,7 @@
 #define __RXX_TYPE_TRAITS_HPP__
 
 #include <type_traits>
+#include "rxx/algorithm.hpp"
 
 namespace rxx {
 
@@ -27,6 +28,20 @@ template<class B1> struct conjunction<B1> : B1 { };
 template<class B1, class... Bn>
 struct conjunction<B1, Bn...> 
     : conditional_t<bool(B1::value), conjunction<Bn...>, B1> {};
+
+template<std::size_t Len, class... Types>
+struct aligned_union
+{
+    static constexpr std::size_t alignment_value = static_max({alignof(Types)...});
+ 
+    struct type
+    {
+        alignas(alignment_value) char _s[static_max({Len, sizeof(Types)...})];
+    };
+};
+
+template<std::size_t Len, class... Types>
+using aligned_union_t = typename aligned_union<Len, Types...>::type;
 
 }
 

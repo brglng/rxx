@@ -17,7 +17,7 @@ namespace rxx {
 template<typename T, typename E>
 class Result {
 private:
-    typename std::aligned_union<1, T, E>::type m_buffer;
+    aligned_union_t<1, T, E> m_buffer;
     bool m_is_ok;
 
     T& value() & noexcept {
@@ -1183,7 +1183,7 @@ public:
 
     Result(Result const&) noexcept {}
 
-    ~Result() noexcept {}
+    ~Result() = default;
 
     Result& operator=(Result&&) noexcept { return *this; }
 

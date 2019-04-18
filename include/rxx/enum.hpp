@@ -3,9 +3,9 @@
 
 #include <cassert>
 #include <iostream>
-#include <type_traits>
 #include <typeindex>
-#include <utility>
+#include "rxx/type_traits.hpp"
+#include "rxx/utility.hpp"
 
 namespace rxx {
 
@@ -128,7 +128,7 @@ using BestMatch = typename std::result_of<Overload<Ts...>(T)>::type;
 
 template<typename... Ts>
 class Enum {
-    typename std::aligned_union<0, Ts...>::type m_storage;
+    aligned_union_t<1, Ts...> m_storage;
     std::type_index m_type_id;
 
     void destroy() {

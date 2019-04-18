@@ -1,6 +1,7 @@
 #ifndef __RXX_HPP__
 #define __RXX_HPP__
 
+#include "rxx/algorithm.hpp"
 #include "rxx/enum.hpp"
 #include "rxx/invoke.hpp"
 #include "rxx/option.hpp"
