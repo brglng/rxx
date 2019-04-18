@@ -32,11 +32,11 @@ struct conjunction<B1, Bn...>
 template<std::size_t Len, class... Types>
 struct aligned_union
 {
-    static constexpr std::size_t alignment_value = static_max({alignof(Types)...});
+    static constexpr std::size_t alignment_value = static_max(alignof(Types)...);
  
     struct type
     {
-        alignas(alignment_value) char _s[static_max({Len, sizeof(Types)...})];
+        alignas(alignment_value) char _s[static_max(Len, sizeof(Types)...)];
     };
 };
 
