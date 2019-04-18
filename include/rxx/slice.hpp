@@ -6,6 +6,7 @@
 #include <utility>
 #include <cstdint>
 #include <cstdlib>
+#include "rxx/utility.hpp"
 
 namespace rxx {
 
@@ -35,7 +36,7 @@ public:
     }
 
     // auto first() -> Option<T&>;
-    // auto first_const() const -> Option<T const&>;
+    // constexpr auto first() const -> Option<T const&>;
 
     // auto split_first() -> Option<tuple<T&, slice<T&>> {
     // }
@@ -83,22 +84,22 @@ public:
         m_ptr { mutslice.as_ptr() }, m_len { mutslice.len() }
     {}
 
-    auto constexpr len() const -> size_t {
+    constexpr auto len() const -> size_t {
         return m_len;
     }
 
-    auto constexpr is_empty() const -> bool {
+    constexpr auto is_empty() const -> bool {
         return m_len == 0;
     }
 
     // auto first() -> Option<T const&>;
 
-    // auto first_const() const -> Option<T const&>;
+    // constexpr auto first() const -> Option<T const&>;
 
     // auto split_first() -> Option<tuple<T&, slice<T&>> {
     // }
 
-    auto as_ptr() const -> T const* {
+    constexpr auto as_ptr() const -> T const* {
         return m_ptr;
     }
 
@@ -131,7 +132,7 @@ constexpr auto slice(T* ptr, size_t len) -> Slice<T> {
 
 template<typename... Args>
 constexpr auto slice(Args&&... args) -> Slice<typename std::common_type<Args...>::type> {
-    return { std::forward<Args>(args)... };
+    return { static_forward<Args>(args)... };
 }
 
 }

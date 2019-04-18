@@ -7,7 +7,6 @@
 #include "rxx/type_traits.hpp"
 #include "rxx/utility.hpp"
 #include "rxx/str.hpp"
-#include "rxx/unit.hpp"
 #include "rxx/option/proto.hpp"
 #include "rxx/result/proto.hpp"
 
@@ -64,7 +63,7 @@ struct OptionBase
 
     template <class U, class... Args, RXX_REQUIRES(std::is_constructible<T, std::initializer_list<U>>)>
     explicit OptionBase(InPlace, std::initializer_list<U> il, Args&&... args)
-        : m_inited{true}, m_storage{il, std::forward<Args>(args)...} {}
+        : m_inited{true}, m_storage{il, static_forward<Args>(args)...} {}
 
     ~OptionBase() { if (m_inited) m_storage.m_value.T::~T(); }
 };
@@ -88,7 +87,7 @@ struct ConstExprOptionBase
 
     template<class U, class... Args, RXX_REQUIRES(std::is_constructible<T, std::initializer_list<U>>)>
     explicit constexpr ConstExprOptionBase(InPlace, std::initializer_list<U> il, Args&&... args)
-        : m_inited{true}, m_storage{il, std::forward<Args>(args)...} {}
+        : m_inited{true}, m_storage{il, static_forward<Args>(args)...} {}
 
     ~ConstExprOptionBase() = default;
 };
@@ -117,7 +116,7 @@ class Option : private option::impl::Base<T> {
     }
 
     auto valptr() noexcept -> typename std::remove_const<T>::type* {
-        return std::addressof(option::impl::Base<T>::m_storage.m_value);
+        return static_addressof(option::impl::Base<T>::m_storage.m_value);
     }
 
     constexpr auto valptr() const noexcept -> T const* {
@@ -129,24 +128,24 @@ class Option : private option::impl::Base<T> {
     }
 
     T&& val() && {
-        return std::move(option::impl::Base<T>::m_storage.m_value);
+        return static_move(option::impl::Base<T>::m_storage.m_value);
     }
 
     T& val() & {
-        return std::move(option::impl::Base<T>::m_storage.m_value);
+        return option::impl::Base<T>::m_storage.m_value;
     }
 
     template<class... Args>
-    void init(Args&&... args) noexcept(noexcept(T(std::forward<Args>(args)...))) {
+    void init(Args&&... args) noexcept(noexcept(T(static_forward<Args>(args)...))) {
         assert(!inited());
-        ::new (static_cast<void*>(valptr())) T{std::forward<Args>(args)...};
+        ::new (static_cast<void*>(valptr())) T{static_forward<Args>(args)...};
         set_inited(true);
     }
 
     template<class U, class... Args>
-    void init(std::initializer_list<U> il, Args&&... args) noexcept(noexcept(T(il, std::forward<Args>(args)...))) {
+    void init(std::initializer_list<U> il, Args&&... args) noexcept(noexcept(T(il, static_forward<Args>(args)...))) {
         assert(!inited());
-        ::new (static_cast<void*>(valptr())) T{il, std::forward<Args>(args)...};
+        ::new (static_cast<void*>(valptr())) T{il, static_forward<Args>(args)...};
         set_inited(true);
     }
 
@@ -172,7 +171,7 @@ public:
     Option(Option&& that) noexcept(std::is_nothrow_move_constructible<T>::value)
         : option::impl::Base<T>{} {
         if (that.inited()) {
-            ::new (static_cast<void*>(valptr())) T{std::move(that.val())};
+            ::new (static_cast<void*>(valptr())) T{static_move(that.val())};
             set_inited(true);
         }
     }
@@ -207,8 +206,8 @@ public:
 
     auto operator=(Option&& that) noexcept(std::is_nothrow_move_assignable<T>::value && std::is_nothrow_move_constructible<T>::value) -> Option& {
         if      (inited() && !that.inited())    clear();
-        else if (!inited() && that.inited())    init(std::move(that.val()));
-        else if (inited() && that.inited())     val() = std::move(that.val());
+        else if (!inited() && that.inited())    init(static_move(that.val()));
+        else if (inited() && that.inited())     val() = static_move(that.val());
         return *this;
     }
 
@@ -235,7 +234,7 @@ public:
             std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
-        return std::move(val());
+        return static_move(val());
     }
 
     auto expect(Str msg) const noexcept -> T {
@@ -248,7 +247,7 @@ public:
 
     auto unwrap() -> T {
         assert(inited());
-        return std::move(val());
+        return static_move(val());
     }
 
     auto unwrap() const -> T {
@@ -258,15 +257,15 @@ public:
 
     auto unwrap_or(T&& def) noexcept -> T {
         if (inited()) {
-            return std::move(val());
+            return static_move(val());
         } else {
-            return std::move(def);
+            return static_move(def);
         }
     }
 
     auto unwrap_or(T const& def) noexcept -> T {
         if (inited()) {
-            return std::move(val());
+            return static_move(val());
         } else {
             return def;
         }
@@ -276,7 +275,7 @@ public:
         if (inited()) {
             return val();
         } else {
-            return std::move(def);
+            return static_move(def);
         }
     }
 
@@ -291,9 +290,9 @@ public:
     template<typename F>
     auto unwrap_or_else(F&& f) -> T {
         if (inited()) {
-            return std::move(val());
+            return static_move(val());
         } else {
-            return invoke(std::forward<F>(f));
+            return invoke(static_forward<F>(f));
         }
     }
 
@@ -302,23 +301,49 @@ public:
         if (inited()) {
             return val();
         } else {
-            return invoke(std::forward<F>(f));
+            return invoke(static_forward<F>(f));
         }
     }
 
     template<typename F>
-    auto map(F&& f) -> Option<typename invoke_result<typename std::decay<F>::type, T&&>::type> {
+    enable_if_t<!std::is_void<invoke_result_t<decay_t<F>, T&>>::value,
+                Option<invoke_result_t<decay_t<F>, T&>>>
+    map(F&& f) {
         if (inited()) {
-            return Some(invoke(std::forward<F>(f), std::move(val())));
+            return Some(invoke(static_forward<F>(f), val()));
         } else {
             return None;
         }
     }
 
     template<typename F>
-    auto map(F&& f) const -> Option<typename invoke_result<typename std::decay<F>::type, T const&>::type> {
+    enable_if_t<std::is_void<invoke_result_t<decay_t<F>, T&>>::value, Option<void>>
+    map(F&& f) {
         if (inited()) {
-            return Some(invoke(std::forward<F>(f), val()));
+            invoke(static_forward<F>(f), val());
+            return None;
+        } else {
+            return None;
+        }
+    }
+
+    template<typename F>
+    enable_if_t<!std::is_void<invoke_result_t<decay_t<F>, T const&>>::value,
+                Option<invoke_result_t<decay_t<F>, T const&>>>
+    map(F&& f) const {
+        if (inited()) {
+            return Some(invoke(static_forward<F>(f), val()));
+        } else {
+            return None;
+        }
+    }
+
+    template<typename F>
+    enable_if_t<std::is_void<invoke_result_t<decay_t<F>, T const&>>::value, Option<void>>
+    map(F&& f) const {
+        if (inited()) {
+            invoke(static_forward<F>(f), val());
+            return None;
         } else {
             return None;
         }
@@ -327,18 +352,18 @@ public:
     template<typename U, typename F>
     auto map_or(U&& def, F&& f) -> U {
         if (inited()) {
-            return invoke(std::forward<F>(f), std::move(val()));
+            return invoke(static_forward<F>(f), val());
         } else {
-            return std::forward<U>(def);
+            return static_forward<U>(def);
         }
     }
 
     template<typename U, typename F>
     auto map_or(U&& def, F&& f) const -> U {
         if (inited()) {
-            return invoke(std::forward<F>(f), val());
+            return invoke(static_forward<F>(f), val());
         } else {
-            return std::forward<U>(def);
+            return static_forward<U>(def);
         }
     }
 
@@ -346,15 +371,15 @@ public:
     typename std::enable_if<
         std::is_same<
             typename std::decay<typename invoke_result<typename std::decay<D>::type>::type>::type,
-            typename std::decay<typename invoke_result<typename std::decay<F>::type, T&&>::type>::type
+            typename std::decay<typename invoke_result<typename std::decay<F>::type, T&>::type>::type
         >::value,
         typename std::decay<typename invoke_result<typename std::decay<D>::type>::type>::type
     >::type
     map_or_else(D&& def, F&& f) {
         if (inited()) {
-            return invoke(std::forward<F>(f), std::move(val()));
+            return invoke(static_forward<F>(f), val());
         } else {
-            return invoke(std::forward<D>(def));
+            return invoke(static_forward<D>(def));
         }
     }
 
@@ -368,9 +393,9 @@ public:
     >::type
     map_or_else(D&& def, F&& f) {
         if (inited()) {
-            return invoke(std::forward<F>(f), val());
+            return invoke(static_forward<F>(f), val());
         } else {
-            return invoke(std::forward<D>(def));
+            return invoke(static_forward<D>(def));
         }
     }
 
@@ -381,10 +406,22 @@ public:
     auto ok_or(E&& err) const noexcept -> Result<T, E>;
 
     template<typename F>
-    auto ok_or_else(F&& err) -> Result<T, typename invoke_result<typename std::decay<F>::type>::type>;
+    enable_if_t<!std::is_void<invoke_result_t<decay_t<F>>>::value,
+                Result<T, invoke_result_t<decay_t<F>>>>
+    ok_or_else(F&& err);
 
     template<typename F>
-    auto ok_or_else(F&& err) const -> Result<T, typename invoke_result<typename std::decay<F>::type>::type>;
+    enable_if_t<std::is_void<invoke_result_t<decay_t<F>>>::value, Result<T, void>>
+    ok_or_else(F&& err);
+
+    template<typename F>
+    enable_if_t<!std::is_void<invoke_result_t<decay_t<F>>>::value,
+                Result<T, invoke_result_t<decay_t<F>>>>
+    ok_or_else(F&& err) const;
+
+    template<typename F>
+    enable_if_t<std::is_void<invoke_result_t<decay_t<F>>>::value, Result<T, void>>
+    ok_or_else(F&& err) const;
 
     template<typename U>
     auto and_(Option<U> optb) const -> Option<U> {
@@ -395,7 +432,7 @@ public:
     template<typename F>
     auto and_then(F&& f) const -> Option<typename invoke_result<typename std::decay<F>::type>::type> {
         if (!inited()) return None;
-        else return invoke(std::forward<F>(f));
+        else return invoke(static_forward<F>(f));
     }
 
     template<typename P>
@@ -403,8 +440,8 @@ public:
         if (!inited()) {
             return None;
         } else {
-            if (invoke(std::forward<P>(predicate), val())) {
-                return std::move(*this);
+            if (invoke(static_forward<P>(predicate), val())) {
+                return static_move(*this);
             } else {
                 return None;
             }
@@ -416,7 +453,7 @@ public:
         if (!inited()) {
             return None;
         } else {
-            if (invoke(std::forward<P>(predicate), val())) {
+            if (invoke(static_forward<P>(predicate), val())) {
                 return *this;
             } else {
                 return None;
@@ -426,7 +463,7 @@ public:
 
     auto or_(Option<T> optb) -> Option<T> {
         if (inited()) {
-            return std::move(*this);
+            return static_move(*this);
         } else {
             return optb;
         }
@@ -443,9 +480,9 @@ public:
     template<typename F>
     auto or_else(F&& f) -> Option<T> {
         if (inited()) {
-            return std::move(*this);
+            return static_move(*this);
         } else {
-            return invoke(std::forward<F>(f));
+            return invoke(static_forward<F>(f));
         }
     }
 
@@ -454,13 +491,13 @@ public:
         if (inited()) {
             return *this;
         } else {
-            return invoke(std::forward<F>(f));
+            return invoke(static_forward<F>(f));
         }
     }
 
     auto xor_(Option<T> optb) -> Option<T> {
         if (inited() && !optb.inited()) {
-            return std::move(*this);
+            return static_move(*this);
         } else if (!inited() && optb.inited()) {
             return optb;
         } else {
@@ -488,7 +525,7 @@ public:
 
     auto get_or_insert(T&& v) -> T& {
         if (!inited()) {
-            init(std::move(v));
+            init(static_move(v));
         } else {
             return val();
         }
@@ -497,7 +534,7 @@ public:
     template<class F>
     auto get_or_insert_with(F&& f) -> T& {
         if (!inited()) {
-            init(invoke(std::forward<F>(f)));
+            init(invoke(static_forward<F>(f)));
         } else {
             return val();
         }
@@ -506,7 +543,7 @@ public:
     auto take() -> Option<T> {
         if (inited()) {
             set_inited(false);
-            return Some(std::move(val()));
+            return Some(static_move(val()));
         } else {
             return None;
         }
@@ -514,9 +551,9 @@ public:
 
     auto replace(T const& value) -> Option<T> {
         if (inited()) {
-            auto old_value = std::move(val());
+            auto old_value = static_move(val());
             val() = value;
-            return Some(std::move(old_value));
+            return Some(static_move(old_value));
         } else {
             init(value);
             return None;
@@ -525,146 +562,68 @@ public:
 
     auto replace(T&& value) -> Option<T> {
         if (inited()) {
-            auto old_value = std::move(val());
-            val() = std::move(value);
-            return Some(std::move(old_value));
+            auto old_value = static_move(val());
+            val() = static_move(value);
+            return Some(static_move(old_value));
         } else {
-            init(std::move(value));
+            init(static_move(value));
             return None;
         }
     }
 
     auto unwrap_or_default() -> T {
         if (inited()) {
-            return std::move(val());
+            return static_move(val());
         } else {
             return T {};
         }
     }
 
-    friend constexpr bool operator==(const Option<T>& x, const Option<T>& y);
-    friend constexpr bool operator<(const Option<T>& x, const Option<T>& y);
+    constexpr bool operator==(const Option& rhs) const {
+        return inited() != rhs.inited() ? false : inited() == false ? true : val() == rhs.val();
+    }
 
-    friend constexpr bool operator==(const Option<T>& x, const T& v);
-    friend constexpr bool operator==(const T& v, const Option<T>& x);
-    friend constexpr bool operator!=(const Option<T>& x, const T& v);
-    friend constexpr bool operator!=(const T& v, const Option<T>& x);
-    friend constexpr bool operator<(const Option<T>& x, const T& v);
-    friend constexpr bool operator>(const T& v, const Option<T>& x);
-    friend constexpr bool operator>(const Option<T>& x, const T& v);
-    friend constexpr bool operator<(const T& v, const Option<T>& x);
-    friend constexpr bool operator>=(const Option<T>& x, const T& v);
-    friend constexpr bool operator<=(const T& v, const Option<T>& x);
-    friend constexpr bool operator<=(const Option<T>& x, const T& v);
-    friend constexpr bool operator>=(const T& v, const Option<T>& x);
+    constexpr bool operator<(const Option& rhs) const {
+        return !inited() ? false : !rhs.inited() ? true : val() < rhs.val();
+    }
 };
 
 template<>
 class Option<void> {
-    bool m_inited;
-
-    constexpr bool inited() const noexcept {
-        return m_inited;
-    }
-
-    void set_inited(bool inited) noexcept {
-        m_inited = inited;
-    }
-
-    void init() noexcept {
-        assert(!inited());
-        set_inited(true);
-    }
-
-    void clear() noexcept {
-        if (inited()) {
-            set_inited(false);
-        }
-    }
-
 public:
-    constexpr Option() noexcept : m_inited{false} {}
-    constexpr Option(option::None) noexcept : m_inited{false} {}
+    constexpr Option() noexcept {}
+    constexpr Option(option::None) noexcept {}
 
-    Option(Option const& that) noexcept {
-        if (that.inited()) {
-            set_inited(true);
-        }
-    }
+    Option(Option const&) noexcept {}
 
-    Option(Option&& that) noexcept {
-        if (that.inited()) {
-            set_inited(true);
-        }
-    }
+    Option(Option&&) noexcept {}
 
-    explicit constexpr Option(Unit) noexcept : m_inited{true} {}
-
-    explicit constexpr Option(InPlace) : m_inited{true} {}
+    explicit constexpr Option(InPlace) noexcept {}
 
     ~Option() = default;
 
-    auto operator=(option::None) noexcept -> Option& {
-        clear();
-        return *this;
-    }
+    auto operator=(option::None) noexcept -> Option& { return *this; }
 
-    auto operator=(Option const& that) noexcept -> Option& {
-        m_inited = that.m_inited;
-        return *this;
-    }
+    auto operator=(Option const&) noexcept -> Option& { return *this; }
 
-    auto operator=(Option&& that) -> Option& {
-        m_inited = that.m_inited;
-        return *this;
-    }
+    auto operator=(Option&&) -> Option& { return *this; }
 
-    explicit constexpr operator bool() const noexcept { return inited(); }
+    explicit constexpr operator bool() const noexcept { return false; }
     
-    constexpr auto is_some() const noexcept -> bool {
-        return inited();
-    }
+    constexpr auto is_some() const noexcept -> bool { return false; }
 
-    constexpr auto is_none() const noexcept -> bool {
-        return !inited();
-    }
+    constexpr auto is_none() const noexcept -> bool { return true; }
 
     void expect(Str msg) const noexcept {
-        if (!inited()) {
-            std::fprintf(stderr, "%s\n", msg.c_str());
-            std::abort();
-        }
-    }
-
-    void unwrap() const {
-        assert(inited());
+        std::fprintf(stderr, "%s\n", msg.c_str());
+        std::terminate();
     }
 
     void unwrap_or() const noexcept {}
 
-    template<typename F>
-    void unwrap_or_else(F&& f) const {
-        if (!inited()) {
-            return invoke(std::forward<F>(f));
-        }
-    }
-
-    template<typename F>
-    auto map(F&& f) const -> Option<typename invoke_result<typename std::decay<F>::type>::type> {
-        if (inited()) {
-            return Some(invoke(std::forward<F>(f)));
-        } else {
-            return None;
-        }
-    }
-
     template<typename U, typename F>
-    auto map_or(U&& def, F&& f) const noexcept -> U {
-        if (inited()) {
-            return invoke(std::forward<F>(f));
-        } else {
-            return std::forward<U>(def);
-        }
+    auto map_or(U&& def) const noexcept -> U {
+        return static_forward<U>(def);
     }
 
     template<typename D, typename F>
@@ -675,12 +634,8 @@ public:
         >::value,
         typename std::decay<typename invoke_result<typename std::decay<D>::type>::type>::type
     >::type
-    map_or_else(D&& def, F&& f) const {
-        if (inited()) {
-            return invoke(std::forward<F>(f));
-        } else {
-            return invoke(std::forward<D>(def));
-        }
+    map_or_else(D&& def) const {
+        return invoke(static_forward<D>(def));
     }
 
     template<typename E>
@@ -696,115 +651,24 @@ public:
     auto ok_or_else(F&& err) const -> Result<void, typename invoke_result<typename std::decay<F>::type>::type>;
 
     template<typename U>
-    auto and_(Option<U> optb) const -> Option<U> {
-        if (!inited()) return None;
-        else return optb;
+    auto and_(Option<U>) const -> Option<U> {
+        return None;
     }
 
-    template<typename F>
-    auto and_then(F&& f) const -> Option<typename invoke_result<typename std::decay<F>::type>::type> {
-        if (!inited()) return None;
-        else return invoke(std::forward<F>(f));
-    }
-
-    template<typename P>
-    auto filter(P&& predicate) -> Option<void> {
-        if (!inited()) {
-            return None;
-        } else {
-            if (invoke(std::forward<P>(predicate))) {
-                return std::move(*this);
-            } else {
-                return None;
-            }
-        }
-    }
-
-    template<typename P>
-    auto filter(P&& predicate) const -> Option<void> {
-        if (!inited()) {
-            return None;
-        } else {
-            if (invoke(std::forward<P>(predicate))) {
-                return *this;
-            } else {
-                return None;
-            }
-        }
-    }
-
-    auto or_(Option<void> optb) const -> Option<void> {
-        if (inited()) {
-            return *this;
-        } else {
-            return optb;
-        }
-    }
+    auto or_(Option<void> optb) const -> Option<void> { return optb; }
 
     template<typename F>
     auto or_else(F&& f) const -> Option<void> {
-        if (inited()) {
-            return *this;
-        } else {
-            return invoke(std::forward<F>(f));
-        }
+        return invoke(static_forward<F>(f));
     }
 
-    auto xor_(Option<void> optb) const -> Option<void> {
-        if (inited() && !optb.inited()) {
-            return *this;
-        } else if (!inited() && optb.inited()) {
-            return optb;
-        } else {
-            return None;
-        }
+    auto xor_(Option<void>) const -> Option<void> {
+        return None;
     }
 
-    void get_or_insert() {
-        if (!inited()) {
-            init();
-        }
-    }
-
-    template<class F>
-    void get_or_insert_with(F&& f) {
-        if (!inited()) {
-            invoke(std::forward<F>(f));
-            init();
-        }
-    }
-
-    auto take() -> Option<void> {
-        if (inited()) {
-            set_inited(false);
-            return Some();
-        } else {
-            return None;
-        }
-    }
-
-    auto replace() -> Option<void> {
-        if (inited()) {
-            return Some();
-        } else {
-            init();
-            return None;
-        }
-    }
-
-    void unwrap_or_default() const {}
-
-    friend constexpr bool operator==(const Option<void>& x, const Option<void>& y);
-    friend constexpr bool operator<(const Option<void>& x, const Option<void>& y);
+    constexpr bool operator==(const Option&) const { return true; }
+    constexpr bool operator<(const Option&) const { return false; }
 };
-
-constexpr bool operator==(const Option<void>& x, const Option<void>& y) {
-    return x.inited() == y.inited();
-}
-
-constexpr bool operator<(const Option<void>& x, const Option<void>& y) {
-    return (!y) ? false : (!x) ? true : false;
-}
 
 template<typename T>
 class Option<T&> {
@@ -862,7 +726,7 @@ public:
             std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
-        return std::move(val());
+        return static_move(val());
     }
 
     auto expect(Str msg) const noexcept -> T const& {
@@ -920,7 +784,7 @@ public:
         if (inited()) {
             return val();
         } else {
-            return invoke(std::forward<F>(f));
+            return invoke(static_forward<F>(f));
         }
     }
 
@@ -929,23 +793,49 @@ public:
         if (inited()) {
             return val();
         } else {
-            return invoke(std::forward<F>(f));
+            return invoke(static_forward<F>(f));
         }
     }
 
     template<typename F>
-    auto map(F&& f) -> Option<typename invoke_result<typename std::decay<F>::type, T&&>::type> {
+    enable_if_t<!std::is_void<invoke_result_t<decay_t<F>, T&>>::value,
+                Option<invoke_result_t<decay_t<F>, T&>>>
+    map(F&& f) {
         if (inited()) {
-            return Some(invoke(std::forward<F>(f), std::move(val())));
+            return Some(invoke(static_forward<F>(f), val()));
         } else {
             return None;
         }
     }
 
     template<typename F>
-    auto map(F&& f) const -> Option<typename invoke_result<typename std::decay<F>::type, T const&>::type> {
+    enable_if_t<std::is_void<invoke_result_t<decay_t<F>, T&>>::value, Option<void>>
+    map(F&& f) {
         if (inited()) {
-            return Some(invoke(std::forward<F>(f), val()));
+            invoke(static_forward<F>(f), val());
+            return None;
+        } else {
+            return None;
+        }
+    }
+
+    template<typename F>
+    enable_if_t<!std::is_void<invoke_result_t<decay_t<F>, T const&>>::value,
+                Option<invoke_result_t<decay_t<F>, T&>>>
+    map(F&& f) const {
+        if (inited()) {
+            return Some(invoke(static_forward<F>(f), val()));
+        } else {
+            return None;
+        }
+    }
+
+    template<typename F>
+    enable_if_t<std::is_void<invoke_result_t<decay_t<F>, T const&>>::value, Option<void>>
+    map(F&& f) const {
+        if (inited()) {
+            invoke(static_forward<F>(f), val());
+            return None;
         } else {
             return None;
         }
@@ -954,18 +844,18 @@ public:
     template<typename U, typename F>
     auto map_or(U&& def, F&& f) -> U {
         if (inited()) {
-            return invoke(std::forward<F>(f), std::move(val()));
+            return invoke(static_forward<F>(f), static_move(val()));
         } else {
-            return std::forward<U>(def);
+            return static_forward<U>(def);
         }
     }
 
     template<typename U, typename F>
     auto map_or(U&& def, F&& f) const -> U {
         if (inited()) {
-            return invoke(std::forward<F>(f), val());
+            return invoke(static_forward<F>(f), val());
         } else {
-            return std::forward<U>(def);
+            return static_forward<U>(def);
         }
     }
 
@@ -973,15 +863,15 @@ public:
     typename std::enable_if<
         std::is_same<
             typename std::decay<typename invoke_result<typename std::decay<D>::type>::type>::type,
-            typename std::decay<typename invoke_result<typename std::decay<F>::type, T&&>::type>::type
+            typename std::decay<typename invoke_result<typename std::decay<F>::type, T&>::type>::type
         >::value,
         typename std::decay<typename invoke_result<typename std::decay<D>::type>::type>::type
     >::type
     map_or_else(D&& def, F&& f) {
         if (inited()) {
-            return invoke(std::forward<F>(f), std::move(val()));
+            return invoke(static_forward<F>(f), val());
         } else {
-            return invoke(std::forward<D>(def));
+            return invoke(static_forward<D>(def));
         }
     }
 
@@ -995,27 +885,27 @@ public:
     >::type
     map_or_else(D&& def, F&& f) {
         if (inited()) {
-            return invoke(std::forward<F>(f), val());
+            return invoke(static_forward<F>(f), val());
         } else {
-            return invoke(std::forward<D>(def));
+            return invoke(static_forward<D>(def));
         }
     }
 
     // template<typename E>
     // auto ok_or(E&& err) noexcept -> Result<T&, E> {
     //     if (inited()) {
-    //         return Ok(std::move(val()));
+    //         return Ok(static_move(val()));
     //     } else {
-    //         return Err(std::forward<E>(err));
+    //         return Err(std::static_forward<E>(err));
     //     }
     // }
 
     // template<typename F>
     // auto ok_or_else(F&& err) -> Result<T&, typename invoke_result<typename std::decay<F>::type>::type> {
     //     if (inited()) {
-    //         return Ok(std::move(val()));
+    //         return Ok(static_move(val()));
     //     } else {
-    //         return Err(invoke(std::forward<F>(err)));
+    //         return Err(invoke(std::static_forward<F>(err)));
     //     }
     // }
 
@@ -1028,7 +918,7 @@ public:
     template<typename F>
     auto and_then(F&& f) const -> Option<typename invoke_result<typename std::decay<F>::type>::type> {
         if (!inited()) return None;
-        else return invoke(std::forward<F>(f));
+        else return invoke(static_forward<F>(f));
     }
 
     template<typename P>
@@ -1036,7 +926,7 @@ public:
         if (!inited()) {
             return None;
         } else {
-            if (invoke(std::forward<P>(predicate), val())) {
+            if (invoke(static_forward<P>(predicate), val())) {
                 return *this;
             } else {
                 return None;
@@ -1049,7 +939,7 @@ public:
         if (!inited()) {
             return None;
         } else {
-            if (invoke(std::forward<P>(predicate), val())) {
+            if (invoke(static_forward<P>(predicate), val())) {
                 return *this;
             } else {
                 return None;
@@ -1078,7 +968,7 @@ public:
         if (inited()) {
             return *this;
         } else {
-            return invoke(std::forward<F>(f));
+            return invoke(static_forward<F>(f));
         }
     }
 
@@ -1087,7 +977,7 @@ public:
         if (inited()) {
             return *this;
         } else {
-            return invoke(std::forward<F>(f));
+            return invoke(static_forward<F>(f));
         }
     }
 
@@ -1122,7 +1012,7 @@ public:
     template<class F>
     auto get_or_insert_with(F&& f) -> T& {
         if (!inited()) {
-            m_ptr = std::addressof(invoke(std::forward<F>(f)));
+            m_ptr = static_addressof(invoke(static_forward<F>(f)));
         } else {
             return val();
         }
@@ -1141,7 +1031,7 @@ public:
     auto replace(T& value) -> Option<T&> {
         if (inited()) {
             T* old_ptr = m_ptr;
-            m_ptr = std::addressof(value);
+            m_ptr = static_addressof(value);
             return Option<T&>(*old_ptr);
         } else {
             init(value);
@@ -1149,33 +1039,13 @@ public:
         }
     }
 
-    friend constexpr bool operator==(const Option<T&>& x, const Option<T&>& y);
-    friend constexpr bool operator<(const Option<T&>& x, const Option<T&>& y);
+    constexpr bool operator==(const Option& rhs) const {
+        return inited() != rhs.inited() ? false : inited() == false ? true : val() == rhs.val();
+    }
 
-    friend constexpr bool operator==(const Option<T&>& x, const T& v);
-    friend constexpr bool operator==(const T& v, const Option<T&>& x);
-    friend constexpr bool operator!=(const Option<T&>& x, const T& v);
-    friend constexpr bool operator!=(const T& v, const Option<T&>& x);
-    friend constexpr bool operator<(const Option<T&>& x, const T& v);
-    friend constexpr bool operator>(const T& v, const Option<T&>& x);
-    friend constexpr bool operator>(const Option<T&>& x, const T& v);
-    friend constexpr bool operator<(const T& v, const Option<T&>& x);
-    friend constexpr bool operator>=(const Option<T&>& x, const T& v);
-    friend constexpr bool operator<=(const T& v, const Option<T&>& x);
-    friend constexpr bool operator<=(const Option<T&>& x, const T& v);
-    friend constexpr bool operator>=(const T& v, const Option<T&>& x);
-    friend constexpr bool operator==(const Option<const T&>& x, const T& v);
-    friend constexpr bool operator==(const T& v, const Option<const T&>& x);
-    friend constexpr bool operator!=(const Option<const T&>& x, const T& v);
-    friend constexpr bool operator!=(const T& v, const Option<const T&>& x);
-    friend constexpr bool operator<(const Option<const T&>& x, const T& v);
-    friend constexpr bool operator>(const T& v, const Option<const T&>& x);
-    friend constexpr bool operator>(const Option<const T&>& x, const T& v);
-    friend constexpr bool operator<(const T& v, const Option<const T&>& x);
-    friend constexpr bool operator>=(const Option<const T&>& x, const T& v);
-    friend constexpr bool operator<=(const T& v, const Option<const T&>& x);
-    friend constexpr bool operator<=(const Option<const T&>& x, const T& v);
-    friend constexpr bool operator>=(const T& v, const Option<const T&>& x);
+    constexpr bool operator<(const Option& rhs) const {
+        return !inited() ? false : !rhs.inited() ? true : val() < rhs.val();
+    }
 };
 
 template <class T>
@@ -1185,19 +1055,9 @@ class Option<T&&>
 };
 
 // Relational operators
-template <class T> constexpr bool operator==(const Option<T>& x, const Option<T>& y)
-{
-    return bool(x) != bool(y) ? false : bool(x) == false ? true : x.val() == y.val();
-}
-
 template <class T> constexpr bool operator!=(const Option<T>& x, const Option<T>& y)
 {
     return !(x == y);
-}
-
-template <class T> constexpr bool operator<(const Option<T>& x, const Option<T>& y)
-{
-    return (!y) ? false : (!x) ? true : x.val() < y.val();
 }
 
 template <class T> constexpr bool operator>(const Option<T>& x, const Option<T>& y)
@@ -1215,7 +1075,7 @@ template <class T> constexpr bool operator>=(const Option<T>& x, const Option<T>
     return !(x < y);
 }
 
-// Comparison with nullopt
+// Comparison with None
 template <class T> constexpr bool operator==(const Option<T>& x, option::None) noexcept
 {
     return (!x);
@@ -1276,196 +1136,9 @@ template <class T> constexpr bool operator>=(option::None, const Option<T>& x) n
     return (!x);
 }
 
-// Comparison with T
-template <class T> constexpr bool operator==(const Option<T>& x, const T& v)
-{
-    return bool(x) ? x.val() == v : false;
-}
-
-template <class T> constexpr bool operator==(const T& v, const Option<T>& x)
-{
-    return bool(x) ? v == x.val() : false;
-}
-
-template <class T> constexpr bool operator!=(const Option<T>& x, const T& v)
-{
-    return bool(x) ? x.val() != v : true;
-}
-
-template <class T> constexpr bool operator!=(const T& v, const Option<T>& x)
-{
-    return bool(x) ? v != x.val() : true;
-}
-
-template <class T> constexpr bool operator<(const Option<T>& x, const T& v)
-{
-    return bool(x) ? x.val() < v : true;
-}
-
-template <class T> constexpr bool operator>(const T& v, const Option<T>& x)
-{
-    return bool(x) ? v > x.val() : true;
-}
-
-template <class T> constexpr bool operator>(const Option<T>& x, const T& v)
-{
-    return bool(x) ? x.val() > v : false;
-}
-
-template <class T> constexpr bool operator<(const T& v, const Option<T>& x)
-{
-    return bool(x) ? v < x.val() : false;
-}
-
-template <class T> constexpr bool operator>=(const Option<T>& x, const T& v)
-{
-    return bool(x) ? x.val() >= v : false;
-}
-
-template <class T> constexpr bool operator<=(const T& v, const Option<T>& x)
-{
-    return bool(x) ? v <= x.val() : false;
-}
-
-template <class T> constexpr bool operator<=(const Option<T>& x, const T& v)
-{
-    return bool(x) ? x.val() <= v : true;
-}
-
-template <class T> constexpr bool operator>=(const T& v, const Option<T>& x)
-{
-    return bool(x) ? v >= x.val() : true;
-}
-
-// Comparison of Option<T&> with T
-template <class T> constexpr bool operator==(const Option<T&>& x, const T& v)
-{
-    return bool(x) ? x.val() == v : false;
-}
-
-template <class T> constexpr bool operator==(const T& v, const Option<T&>& x)
-{
-    return bool(x) ? v == x.val() : false;
-}
-
-template <class T> constexpr bool operator!=(const Option<T&>& x, const T& v)
-{
-    return bool(x) ? x.val() != v : true;
-}
-
-template <class T> constexpr bool operator!=(const T& v, const Option<T&>& x)
-{
-    return bool(x) ? v != x.val() : true;
-}
-
-template <class T> constexpr bool operator<(const Option<T&>& x, const T& v)
-{
-    return bool(x) ? x.val() < v : true;
-}
-
-template <class T> constexpr bool operator>(const T& v, const Option<T&>& x)
-{
-    return bool(x) ? v > x.val() : true;
-}
-
-template <class T> constexpr bool operator>(const Option<T&>& x, const T& v)
-{
-    return bool(x) ? x.val() > v : false;
-}
-
-template <class T> constexpr bool operator<(const T& v, const Option<T&>& x)
-{
-    return bool(x) ? v < x.val() : false;
-}
-
-template <class T> constexpr bool operator>=(const Option<T&>& x, const T& v)
-{
-    return bool(x) ? x.val() >= v : false;
-}
-
-template <class T> constexpr bool operator<=(const T& v, const Option<T&>& x)
-{
-    return bool(x) ? v <= x.val() : false;
-}
-
-template <class T> constexpr bool operator<=(const Option<T&>& x, const T& v)
-{
-    return bool(x) ? x.val() <= v : true;
-}
-
-template <class T> constexpr bool operator>=(const T& v, const Option<T&>& x)
-{
-    return bool(x) ? v >= x.val() : true;
-}
-
-// Comparison of Option<T const&> with T
-template <class T> constexpr bool operator==(const Option<const T&>& x, const T& v)
-{
-    return bool(x) ? x.val() == v : false;
-}
-
-template <class T> constexpr bool operator==(const T& v, const Option<const T&>& x)
-{
-    return bool(x) ? v == x.val() : false;
-}
-
-template <class T> constexpr bool operator!=(const Option<const T&>& x, const T& v)
-{
-    return bool(x) ? x.val() != v : true;
-}
-
-template <class T> constexpr bool operator!=(const T& v, const Option<const T&>& x)
-{
-    return bool(x) ? v != x.val() : true;
-}
-
-template <class T> constexpr bool operator<(const Option<const T&>& x, const T& v)
-{
-    return bool(x) ? x.val() < v : true;
-}
-
-template <class T> constexpr bool operator>(const T& v, const Option<const T&>& x)
-{
-    return bool(x) ? v > x.val() : true;
-}
-
-template <class T> constexpr bool operator>(const Option<const T&>& x, const T& v)
-{
-    return bool(x) ? x.val() > v : false;
-}
-
-template <class T> constexpr bool operator<(const T& v, const Option<const T&>& x)
-{
-    return bool(x) ? v < x.val() : false;
-}
-
-template <class T> constexpr bool operator>=(const Option<const T&>& x, const T& v)
-{
-    return bool(x) ? x.val() >= v : false;
-}
-
-template <class T> constexpr bool operator<=(const T& v, const Option<const T&>& x)
-{
-    return bool(x) ? v <= x.val() : false;
-}
-
-template <class T> constexpr bool operator<=(const Option<const T&>& x, const T& v)
-{
-    return bool(x) ? x.val() <= v : true;
-}
-
-template <class T> constexpr bool operator>=(const T& v, const Option<const T&>& x)
-{
-    return bool(x) ? v >= x.val() : true;
-}
-
 template<typename T>
 inline auto Some(T&& value) -> Option<typename std::decay<T>::type> {
     return Option<typename std::decay<T>::type>{static_forward<typename std::decay<T>::type>(value)};
-}
-
-inline auto Some() -> Option<void> {
-    return Option<void>(Unit());
 }
 
 }

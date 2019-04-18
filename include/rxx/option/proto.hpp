@@ -15,19 +15,12 @@ struct None {
 
 constexpr option::None None{option::None::init {}};
 
-template<typename T>
-class Option;
-
-template<>
-class Option<void>;
-
-template<typename T>
-class Option<T&>;
+template<typename T>    class Option;
+template<>              class Option<void>;
+template<typename T>    class Option<T&>;
 
 template<typename T>
 inline auto Some(T&& value) -> Option<typename std::decay<T>::type>;
-
-inline auto Some() -> Option<void>;
 
 template<typename T> struct is_option : std::false_type {};
 template<typename T> struct is_option<Option<T>> : std::true_type {};

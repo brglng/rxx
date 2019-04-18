@@ -40,7 +40,7 @@ public:
         return m_bytes;
     }
 
-    constexpr auto as_bytes() const noexcept -> Slice<uint8_t> {
+    constexpr auto as_bytes() const noexcept -> Slice<const uint8_t> {
         return m_bytes;
     }
 
@@ -63,7 +63,7 @@ public:
 
 
 class Str {
-    Slice<const uint8_t> m_bytes;
+    const Slice<const uint8_t> m_bytes;
 
 public:
     template<std::size_t N>
@@ -127,28 +127,28 @@ inline bool operator==(MutStr const& lhs, Str const& rhs) {
 }
 
 template<std::size_t N>
-constexpr auto str(const char (&s)[N]) -> Str {
+inline constexpr auto str(const char (&s)[N]) -> Str {
     return Str{s};
 }
 
 template<std::size_t N>
-constexpr auto str(char (&s)[N]) -> Str {
+inline constexpr auto str(char (&s)[N]) -> Str {
     return MutStr{s};
 }
 
-auto str(const char* s) -> Str {
+inline auto str(const char* s) -> Str {
     return Str(s, std::strlen(s));
 }
 
-auto str(char* s) -> MutStr {
+inline auto str(char* s) -> MutStr {
     return MutStr(s, std::strlen(s));
 }
 
-Str str(std::string const& s) {
+inline Str str(std::string const& s) {
     return Str{&s[0], s.size()};
 }
 
-MutStr str(std::string&& s) {
+inline MutStr str(std::string&& s) {
     return MutStr{&s[0], s.size()};
 }
 

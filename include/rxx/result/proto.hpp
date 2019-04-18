@@ -2,6 +2,7 @@
 #define __RXX_RESULT_PROTO_HPP__
 
 #include <type_traits>
+#include "rxx/utility.hpp"
 
 namespace rxx {
 
@@ -10,6 +11,14 @@ namespace result {
 template<typename T>
 struct Ok {
     T m_ok;
+
+    constexpr Ok(T&& t) : m_ok(static_move(t)) {}
+    constexpr Ok(T const& t) : m_ok(t) {}
+    Ok(Ok&&) = default;
+    Ok(Ok const&) = default;
+    Ok& operator=(Ok&&) = default;
+    Ok& operator=(Ok const&) = default;
+    ~Ok() = default;
 };
 
 template<> struct Ok<void> {};
@@ -17,6 +26,14 @@ template<> struct Ok<void> {};
 template<typename E>
 struct Err {
     E m_err;
+
+    constexpr Err(E&& e) : m_err(static_move(e)) {}
+    constexpr Err(E const& e) : m_err(e) {}
+    Err(Err&&) = default;
+    Err(Err const&) = default;
+    Err& operator=(Err&&) = default;
+    Err& operator=(Err const&) = default;
+    ~Err() = default;
 };
 
 template<> struct Err<void> {};
@@ -35,23 +52,15 @@ template<typename E> struct is_same_err<Err<E>, Err<E>> : std::true_type {};
 
 }
 
-template<typename T, typename E>
-class Result;
-
-template<typename E>
-class Result<void, E>;
-
-template<typename T, typename E>
-class Result<T&, E>;
-
-template<typename T, typename E>
-class Result<T, E&>;
-
-template<typename E>
-class Result<void, E&>;
-
-template<typename T, typename E>
-class Result<T&, E&>;
+template<typename T, typename E>    class Result;
+template<typename E>                class Result<void, E>;
+template<typename T>                class Result<T, void>;
+template<>                          class Result<void, void>;
+template<typename T, typename E>    class Result<T&, E>;
+template<typename T, typename E>    class Result<T, E&>;
+template<typename E>                class Result<void, E&>;
+template<typename T>                class Result<T&, void>;
+template<typename T, typename E>    class Result<T&, E&>;
 
 template<typename T>
 inline auto Ok(T&& value) -> result::Ok<typename std::decay<T>::type>;
@@ -60,6 +69,8 @@ inline auto Ok() -> result::Ok<void> { return result::Ok<void>(); }
 
 template<typename E>
 inline auto Err(E&& err) -> result::Err<typename std::decay<E>::type>;
+
+inline auto Err() -> result::Err<void> { return result::Err<void>(); }
 
 template<typename T> struct is_result : std::false_type {};
 template<typename T, typename E> struct is_result<Result<T, E>> : std::true_type {};

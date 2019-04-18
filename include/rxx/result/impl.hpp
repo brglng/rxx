@@ -7,16 +7,16 @@
 namespace rxx {
 
 template<typename T, typename E>
-auto Result<T, E>::ok() -> Option<T> {
+inline auto Result<T, E>::ok() -> Option<T> {
     if (is_ok()) {
-        return Some(std::move(value()));
+        return Some(static_move(value()));
     } else {
         return None;
     }
 }
 
 template<typename T, typename E>
-auto Result<T, E>::ok() const -> Option<T> {
+inline auto Result<T, E>::ok() const -> Option<T> {
     if (is_ok()) {
         return Some(value());
     } else {
@@ -25,21 +25,67 @@ auto Result<T, E>::ok() const -> Option<T> {
 }
 
 template<typename T, typename E>
-auto Result<T, E>::err() -> Option<E> {
+inline auto Result<T, E>::err() -> Option<E> {
     if (is_err()) {
-        return Some(std::move(error()));
+        return Some(static_move(error()));
     } else {
         return None;
     }
 }
 
 template<typename T, typename E>
-auto Result<T, E>::err() const -> Option<E> {
+inline auto Result<T, E>::err() const -> Option<E> {
     if (is_err()) {
         return Some(error());
     } else {
         return None;
     }
+}
+
+template<typename E>
+inline auto Result<void, E>::ok() const -> Option<void> {
+    return Option<void>();
+}
+
+template<typename E>
+inline auto Result<void, E>::err() -> Option<E> {
+    if (is_err()) {
+        return Some(static_move(error()));
+    } else {
+        return None;
+    }
+}
+
+template<typename E>
+inline auto Result<void, E>::err() const -> Option<E> {
+    if (is_err()) {
+        return Some(error());
+    } else {
+        return None;
+    }
+}
+
+template<typename T>
+inline auto Result<T, void>::ok() -> Option<T> {
+    return Some(static_move(value()));
+}
+
+template<typename T>
+inline auto Result<T, void>::ok() const -> Option<T> {
+    return Some(value());
+}
+
+template<typename T>
+inline auto Result<T, void>::err() const -> Option<void> {
+    return None;
+}
+
+inline auto Result<void, void>::ok() const -> Option<void> {
+    return None;
+}
+
+inline auto Result<void, void>::err() const -> Option<void> {
+    return None;
 }
 
 }
