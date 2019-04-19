@@ -18,10 +18,10 @@ public:
     template<std::size_t N>
     constexpr MutStr(char (&s)[N]) noexcept : m_bytes{static_cast<unsigned char (&)[N]>(s)} {}
 
-    explicit constexpr MutStr(char *s, size_t len) noexcept : m_bytes{(uint8_t*)s, len} {}
+    explicit constexpr MutStr(char *s, size_t len) noexcept : m_bytes{(uint8_t*)s, len + 1} {}
 
     constexpr auto len() const noexcept -> size_t {
-        return m_bytes.len();
+        return m_bytes.len() - 1;
     }
 
     constexpr auto is_empty() const noexcept -> bool {
@@ -76,12 +76,12 @@ public:
         m_bytes { (const unsigned char (&)[N])(s) }
     {}
 
-    explicit constexpr Str(const char* s, size_t len) noexcept : m_bytes{(uint8_t const*)s, len} {}
+    explicit constexpr Str(const char* s, size_t len) noexcept : m_bytes{(uint8_t const*)s, len + 1} {}
 
-    constexpr Str(const MutStr s) noexcept : m_bytes{s.as_bytes().as_ptr(), s.len()} {}
+    constexpr Str(const MutStr s) noexcept : m_bytes{s.as_bytes().as_ptr(), s.as_bytes().len()} {}
 
     constexpr auto len() const -> size_t {
-        return m_bytes.len();
+        return m_bytes.len() - 1;
     }
 
     constexpr auto is_empty() const -> bool {
@@ -94,6 +94,14 @@ public:
 
     constexpr auto as_bytes() const -> Slice<const uint8_t> {
         return m_bytes;
+    }
+
+    bool starts_with(Str pat) const {
+        if (pat.len() <= len()) {
+            return strncmp(c_str(), pat.c_str(), pat.len()) == 0;
+        } else {
+            return false;
+        }
     }
 
     uint8_t const& operator[](size_t i) { return m_bytes[i]; }
