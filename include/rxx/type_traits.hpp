@@ -11,6 +11,9 @@ namespace rxx {
 template<typename... Ts> struct make_void { typedef void type;};
 template<typename... Ts> using void_t = typename make_void<Ts...>::type;
 
+template<typename... Args>
+using common_type_t = typename std::common_type<Args...>::type;
+
 template< bool B, class T = void >
 using enable_if_t = typename std::enable_if<B,T>::type;
 
