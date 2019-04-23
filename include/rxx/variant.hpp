@@ -175,10 +175,6 @@ public:
         destroy();
     }
 
-    Variant<Ts...>& operator=(Variant<Ts...>& that) {
-        return *this = std::move(that);
-    }
-
     Variant<Ts...>& operator=(Variant<Ts...>&& that) {
         if (this != &that) {
             if (m_type_id != that.m_type_id) {
@@ -240,7 +236,7 @@ namespace variant {
 
 template<class... Args, class T>
 auto make(T&& value) -> Variant<decay_t<Args>...> {
-    return Variant<Args...>(static_forward<decay_t<T>>(value));
+    return Variant<decay_t<Args>...>(static_forward<T>(value));
 }
 
 }

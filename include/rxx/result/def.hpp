@@ -1280,12 +1280,12 @@ class Result<T&&, E&&> {
 
 template<typename T>
 inline auto Ok(T&& value) -> result::Ok<typename std::decay<T>::type> {
-    return result::Ok<typename std::decay<T>::type>(static_forward<typename std::decay<T>::type>(value));
+    return result::Ok<typename std::decay<T>::type>(static_forward<T>(value));
 }
 
 template<typename E>
 inline auto Err(E&& err) -> result::Err<typename std::decay<E>::type> {
-    return result::Err<typename std::decay<E>::type>{static_forward<typename std::decay<E>::type>(err)};
+    return result::Err<typename std::decay<E>::type>{static_forward<E>(err)};
 }
 
 #define RXX_RESULT_TRY(...) ({              \

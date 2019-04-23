@@ -132,7 +132,7 @@ constexpr auto slice(T* ptr, size_t len) -> Slice<T> {
 
 template<typename... Args>
 constexpr auto slice(Args&&... args) -> Slice<decay_t<common_type_t<Args...>>> {
-    return { static_forward<decay_t<Args>>(args)... };
+    return { static_forward<Args>(args)... };
 }
 
 }

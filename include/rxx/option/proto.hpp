@@ -7,13 +7,13 @@ namespace rxx {
 namespace option {
 
 struct None {
-    struct init {};
-    explicit constexpr None(init) {}
+    struct Init {};
+    explicit constexpr None(Init) {}
 };
 
 }
 
-constexpr option::None None{option::None::init {}};
+constexpr option::None None{option::None::Init{}};
 
 template<typename T>    class Option;
 template<>              class Option<void>;
