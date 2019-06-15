@@ -13,7 +13,7 @@ struct None {
 
 }
 
-constexpr option::None None(option::None::Init());
+constexpr option::None None(option::None::Init{});
 
 template<typename T>    class Option;
 template<>              class Option<void>;
