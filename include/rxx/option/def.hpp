@@ -26,7 +26,7 @@ union Storage
     constexpr Storage(TrivialInit) noexcept : m_dummy{} {};
 
     template<class... Args>
-    constexpr Storage(Args&&... args) : m_value{static_forward<Args>(args)...} {}
+    constexpr Storage(Args&&... args) : m_value(static_forward<Args>(args)...) {}
 
     ~Storage(){}
 };
@@ -40,7 +40,7 @@ union ConstExprStorage
     constexpr ConstExprStorage(TrivialInit) noexcept : m_dummy{} {};
 
     template <class... Args>
-    constexpr ConstExprStorage(Args&&... args) : m_value{static_forward<Args>(args)...} {}
+    constexpr ConstExprStorage(Args&&... args) : m_value(static_forward<Args>(args)...) {}
 
     ~ConstExprStorage() = default;
 };
@@ -51,19 +51,19 @@ struct OptionBase
     bool m_inited;
     Storage<T> m_storage;
 
-    constexpr OptionBase() noexcept : m_inited{false}, m_storage{trivial_init} {};
+    constexpr OptionBase() noexcept : m_inited(false), m_storage(trivial_init) {};
 
-    explicit constexpr OptionBase(const T& v) : m_inited{true}, m_storage{v} {}
+    explicit constexpr OptionBase(const T& v) : m_inited(true), m_storage(v) {}
 
-    explicit constexpr OptionBase(T&& v) : m_inited{true}, m_storage{static_move(v)} {}
+    explicit constexpr OptionBase(T&& v) : m_inited(true), m_storage(static_move(v)) {}
 
     template<class... Args>
     explicit OptionBase(in_place_t, Args&&... args)
-        : m_inited{true}, m_storage{static_forward<Args>(args)...} {}
+        : m_inited(true), m_storage(static_forward<Args>(args)...) {}
 
     template <class U, class... Args, RXX_REQUIRES(std::is_constructible<T, std::initializer_list<U>>)>
     explicit OptionBase(in_place_t, std::initializer_list<U> il, Args&&... args)
-        : m_inited{true}, m_storage{il, static_forward<Args>(args)...} {}
+        : m_inited(true), m_storage(il, static_forward<Args>(args)...) {}
 
     ~OptionBase() { if (m_inited) m_storage.m_value.T::~T(); }
 };
@@ -75,19 +75,19 @@ struct ConstExprOptionBase
     bool m_inited;
     ConstExprStorage<T> m_storage;
 
-    constexpr ConstExprOptionBase() noexcept : m_inited{false}, m_storage{trivial_init} {};
+    constexpr ConstExprOptionBase() noexcept : m_inited(false), m_storage(trivial_init) {};
 
-    explicit constexpr ConstExprOptionBase(const T& v) : m_inited{true}, m_storage{v} {}
+    explicit constexpr ConstExprOptionBase(const T& v) : m_inited(true), m_storage(v) {}
 
-    explicit constexpr ConstExprOptionBase(T&& v) : m_inited{true}, m_storage{static_move(v)} {}
+    explicit constexpr ConstExprOptionBase(T&& v) : m_inited(true), m_storage(static_move(v)) {}
 
     template<class... Args>
     explicit constexpr ConstExprOptionBase(in_place_t, Args&&... args)
-        : m_inited{true}, m_storage{static_forward<Args>(args)...} {}
+        : m_inited(true), m_storage(static_forward<Args>(args)...) {}
 
     template<class U, class... Args, RXX_REQUIRES(std::is_constructible<T, std::initializer_list<U>>)>
     explicit constexpr ConstExprOptionBase(in_place_t, std::initializer_list<U> il, Args&&... args)
-        : m_inited{true}, m_storage{il, static_forward<Args>(args)...} {}
+        : m_inited(true), m_storage(il, static_forward<Args>(args)...) {}
 
     ~ConstExprOptionBase() = default;
 };
@@ -104,8 +104,8 @@ using Base = typename std::conditional<
 
 template<typename T>
 class Option : private option::impl::Base<T> {
-    static_assert( !std::is_same<typename std::decay<T>::type, option::None>::value, "bad T" );
-    static_assert( !std::is_same<typename std::decay<T>::type, in_place_t>::value, "bad T" );
+    static_assert(!std::is_same<typename std::decay<T>::type, option::None>::value, "bad T");
+    static_assert(!std::is_same<typename std::decay<T>::type, in_place_t>::value, "bad T");
 
     constexpr bool inited() const noexcept {
         return option::impl::Base<T>::m_inited;
@@ -138,14 +138,14 @@ class Option : private option::impl::Base<T> {
     template<class... Args>
     void init(Args&&... args) noexcept(noexcept(T(static_forward<Args>(args)...))) {
         assert(!inited());
-        ::new (static_cast<void*>(valptr())) T{static_forward<Args>(args)...};
+        ::new (static_cast<void*>(valptr())) T(static_forward<Args>(args)...);
         set_inited(true);
     }
 
     template<class U, class... Args>
     void init(std::initializer_list<U> il, Args&&... args) noexcept(noexcept(T(il, static_forward<Args>(args)...))) {
         assert(!inited());
-        ::new (static_cast<void*>(valptr())) T{il, static_forward<Args>(args)...};
+        ::new (static_cast<void*>(valptr())) T(il, static_forward<Args>(args)...);
         set_inited(true);
     }
 
@@ -161,34 +161,34 @@ public:
     constexpr Option(option::None) noexcept : option::impl::Base<T>{} {}
 
     Option(Option const& that) noexcept(std::is_nothrow_copy_constructible<T>::value)
-        : option::impl::Base<T>{} {
+        : option::impl::Base<T>() {
         if (that.inited()) {
-            ::new (static_cast<void*>(valptr())) T{that.val()};
+            ::new (static_cast<void*>(valptr())) T(that.val());
             set_inited(true);
         }
     }
 
     Option(Option&& that) noexcept(std::is_nothrow_move_constructible<T>::value)
-        : option::impl::Base<T>{} {
+        : option::impl::Base<T>() {
         if (that.inited()) {
-            ::new (static_cast<void*>(valptr())) T{static_move(that.val())};
+            ::new (static_cast<void*>(valptr())) T(static_move(that.val()));
             set_inited(true);
         }
     }
 
     explicit constexpr Option(T const& value) noexcept(std::is_nothrow_copy_constructible<T>::value)
-        : option::impl::Base<T>{value} {}
+        : option::impl::Base<T>(value) {}
 
     explicit constexpr Option(T&& value) noexcept(std::is_nothrow_move_constructible<T>::value)
-        : option::impl::Base<T>{static_move(value)} {}
+        : option::impl::Base<T>(static_move(value)) {}
 
     template<class... Args>
     explicit constexpr Option(in_place_t, Args&&... args)
-        : option::impl::Base<T>{in_place_t {}, static_forward<Args>(args)...} {}
+        : option::impl::Base<T>(in_place_t(), static_forward<Args>(args)...) {}
 
     template<class U, class... Args, RXX_REQUIRES(std::is_constructible<T, std::initializer_list<U>>)>
     explicit constexpr Option(in_place_t, std::initializer_list<U> il, Args&&... args)
-        : option::impl::Base<T>{in_place_t{}, il, static_forward<Args>(args)...} {}
+        : option::impl::Base<T>(in_place_t(), il, static_forward<Args>(args)...) {}
 
     ~Option() = default;
 
@@ -1138,7 +1138,7 @@ template <class T> constexpr bool operator>=(option::None, const Option<T>& x) n
 
 template<typename T>
 inline auto Some(T&& value) -> Option<typename std::decay<T>::type> {
-    return Option<typename std::decay<T>::type>{static_forward<T>(value)};
+    return Option<typename std::decay<T>::type>(static_forward<T>(value));
 }
 
 }

@@ -20,12 +20,12 @@ class Slice {
 
 public:
     template<std::size_t N>
-    constexpr Slice(T (&&a)[N]) : m_ptr { a }, m_len { N } {}
+    constexpr Slice(T (&&a)[N]) : m_ptr(a), m_len(N) {}
 
     template<std::size_t N>
-    constexpr Slice(T (&a)[N]) : m_ptr { a }, m_len { N } {}
+    constexpr Slice(T (&a)[N]) : m_ptr(a), m_len(N) {}
 
-    constexpr Slice(T* ptr, size_t len) : m_ptr { ptr }, m_len { len } {}
+    constexpr Slice(T* ptr, size_t len) : m_ptr(ptr), m_len(len) {}
 
     auto constexpr len() const -> size_t {
         return m_len;
@@ -73,15 +73,15 @@ class Slice<const T> {
 
 public:
     template<std::size_t N>
-    constexpr Slice(const T (&&a)[N]) : m_ptr { a }, m_len { N } {}
+    constexpr Slice(const T (&&a)[N]) : m_ptr(a), m_len(N) {}
 
     template<std::size_t N>
-    constexpr Slice(const T (&a)[N]) : m_ptr { a }, m_len { N } {}
+    constexpr Slice(const T (&a)[N]) : m_ptr(a), m_len(N) {}
 
-    constexpr Slice(T const* ptr, size_t len) : m_ptr { ptr }, m_len { len } {}
+    constexpr Slice(T const* ptr, size_t len) : m_ptr(ptr), m_len(len) {}
 
     constexpr Slice(Slice<T> mutslice) :
-        m_ptr { mutslice.as_ptr() }, m_len { mutslice.len() }
+        m_ptr(mutslice.as_ptr()), m_len(mutslice.len())
     {}
 
     constexpr auto len() const -> size_t {
@@ -117,22 +117,23 @@ public:
 
 template<typename T, std::size_t N>
 constexpr auto slice(T (&&a)[N]) -> Slice<T> {
-    return Slice<T> { std::forward<T[N]>(a) };
+    return Slice<T>(std::forward<T[N]>(a));
 }
 
 template<typename T, std::size_t N>
 constexpr auto slice(T (&a)[N]) -> Slice<T> {
-    return Slice<T> { a };
+    return Slice<T>(a);
 }
 
 template<typename T>
 constexpr auto slice(T* ptr, size_t len) -> Slice<T> {
-    return Slice<T> { ptr, len };
+    return Slice<T>(ptr, len);
 }
 
 template<typename... Args>
 constexpr auto slice(Args&&... args) -> Slice<decay_t<common_type_t<Args...>>> {
-    return { static_forward<Args>(args)... };
+    using T = decay_t<common_type_t<Args...>>;
+    return T(static_forward<Args>(args)...);
 }
 
 }

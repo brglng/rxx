@@ -70,60 +70,60 @@ private:
 
 public:
     explicit Result(T&& value) noexcept(std::is_nothrow_move_constructible<T>::value)
-        : m_is_ok{true} {
-        new (valueptr()) T{static_move(value)};
+        : m_is_ok(true) {
+        new (valueptr()) T(static_move(value));
     }
 
     explicit Result(T const& value) noexcept(std::is_nothrow_copy_assignable<T>::value)
-        : m_is_ok{true} {
-        new (valueptr()) T{value};
+        : m_is_ok(true) {
+        new (valueptr()) T(value);
     }
 
     explicit Result(E&& err) noexcept(std::is_nothrow_move_constructible<E>::value)
         : m_is_ok(false) {
-        new (errorptr()) E{static_move(err)};
+        new (errorptr()) E(static_move(err));
     }
 
     explicit Result(E const& err) noexcept(std::is_nothrow_copy_constructible<E>::value)
         : m_is_ok(false) {
-        new (errorptr()) E{err};
+        new (errorptr()) E(err);
     }
 
     Result(result::Ok<T>&& value) noexcept(std::is_nothrow_move_constructible<T>::value)
         : m_is_ok(true) {
-        new (valueptr()) T{static_move(value.m_ok)};
+        new (valueptr()) T(static_move(value.m_ok));
     }
 
     Result(result::Err<E>&& err) noexcept(std::is_nothrow_move_constructible<E>::value)
         : m_is_ok(false) {
-        new (errorptr()) E{static_move(err.m_err)};
+        new (errorptr()) E(static_move(err.m_err));
     }
 
     Result(result::Ok<T> const& value) noexcept(std::is_nothrow_copy_constructible<T>::value)
         : m_is_ok(true) {
-        new (valueptr()) T{value.m_ok};
+        new (valueptr()) T(value.m_ok);
     }
 
     Result(result::Err<E> const& err) noexcept(std::is_nothrow_copy_constructible<E>::value)
         : m_is_ok(false) {
-        new (errorptr()) E{err.m_err};
+        new (errorptr()) E(err.m_err);
     }
 
     Result(Result&& that) noexcept(std::is_nothrow_move_constructible<T>::value && std::is_nothrow_move_constructible<E>::value)
-        : m_is_ok{that.m_is_ok} {
+        : m_is_ok(that.m_is_ok) {
         if (m_is_ok) {
-            new (valueptr()) T{static_move(that.value())};
+            new (valueptr()) T(static_move(that.value()));
         } else {
-            new (errorptr()) E{static_move(that.error())};
+            new (errorptr()) E(static_move(that.error()));
         }
     }
 
     Result(Result const& that) noexcept(std::is_nothrow_copy_constructible<T>::value && std::is_nothrow_copy_constructible<E>::value)
         : m_is_ok(that.m_is_ok) {
         if (m_is_ok) {
-            new (valueptr()) T{that.value()};
+            new (valueptr()) T(that.value());
         } else {
-            new (errorptr()) E{that.error()};
+            new (errorptr()) E(that.error());
         }
     }
 
@@ -576,12 +576,12 @@ public:
 
     explicit Result(E&& err) noexcept(std::is_nothrow_move_constructible<E>::value)
         : m_is_ok(false) {
-        new (errorptr()) E{static_move(err)};
+        new (errorptr()) E(static_move(err));
     }
 
     explicit Result(E const& err) noexcept(std::is_nothrow_copy_constructible<E>::value)
         : m_is_ok(false) {
-        new (errorptr()) E{err};
+        new (errorptr()) E(err);
     }
 
     Result(result::Ok<void>&&) noexcept : m_is_ok(true) {}
@@ -589,27 +589,27 @@ public:
     Result(result::Err<E>&& err)
         noexcept(std::is_nothrow_move_constructible<E>::value)
         : m_is_ok(false) {
-        new (errorptr()) E{static_move(err.m_err)};
+        new (errorptr()) E(static_move(err.m_err));
     }
 
     Result(result::Ok<void> const&) : m_is_ok(true) {}
 
     Result(result::Err<E> const& err) noexcept(std::is_nothrow_copy_constructible<E>::value)
         : m_is_ok(false) {
-        new (errorptr()) E{err.m_err};
+        new (errorptr()) E(err.m_err);
     }
 
     Result(Result&& that) noexcept(std::is_nothrow_move_constructible<E>::value)
-        : m_is_ok{that.m_is_ok} {
+        : m_is_ok(that.m_is_ok) {
         if (!m_is_ok) {
-            new (errorptr()) E{static_move(that.error())};
+            new (errorptr()) E(static_move(that.error()));
         }
     }
 
     Result(Result const& that) noexcept(std::is_nothrow_copy_constructible<E>::value)
         : m_is_ok(that.m_is_ok) {
         if (!m_is_ok) {
-            new (errorptr()) E{that.error()};
+            new (errorptr()) E(that.error());
         }
     }
 
@@ -973,33 +973,33 @@ private:
 
 public:
     explicit Result(T&& value) noexcept(std::is_nothrow_move_constructible<T>::value) {
-        new (valueptr()) T{static_move(value)};
+        new (valueptr()) T(static_move(value));
     }
 
     explicit Result(T const& value) noexcept(std::is_nothrow_copy_assignable<T>::value) {
-        new (valueptr()) T{value};
+        new (valueptr()) T(value);
     }
 
     Result(result::Ok<T>&& value) noexcept(std::is_nothrow_move_constructible<T>::value) {
-        new (valueptr()) T{static_move(value.m_ok)};
+        new (valueptr()) T(static_move(value.m_ok));
     }
 
     Result(result::Err<void>&&) noexcept {}
 
     Result(result::Ok<T> const& value)
         noexcept(std::is_nothrow_copy_constructible<T>::value) {
-        new (valueptr()) T{value.m_ok};
+        new (valueptr()) T(value.m_ok);
     }
 
     Result(result::Err<void> const&) noexcept {}
 
     Result(Result&& that) noexcept(std::is_nothrow_move_constructible<T>::value) {
-        new (valueptr()) T{static_move(that.value())};
+        new (valueptr()) T(static_move(that.value()));
     }
 
     Result(Result const& that) noexcept(std::is_nothrow_copy_constructible<T>::value) {
         if (that.m_is_ok) {
-            new (valueptr()) T{that.value()};
+            new (valueptr()) T(that.value());
         }
     }
 
@@ -1288,7 +1288,7 @@ inline auto Err(E&& err) -> result::Err<typename std::decay<E>::type> {
     return result::Err<typename std::decay<E>::type>{static_forward<E>(err)};
 }
 
-#define RXX_RESULT_TRY(...) ({              \
+#define RXX_TRY(...) ({                     \
     auto __res = __VA_ARGS__;               \
     if (__res.is_err())                     \
         return Err(__res.unwrap_err());     \

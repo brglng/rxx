@@ -16,9 +16,9 @@ class MutStr {
 
 public:
     template<std::size_t N>
-    constexpr MutStr(char (&s)[N]) noexcept : m_bytes{static_cast<unsigned char (&)[N]>(s)} {}
+    constexpr MutStr(char (&s)[N]) noexcept : m_bytes(static_cast<unsigned char (&)[N]>(s)) {}
 
-    explicit constexpr MutStr(char *s, size_t len) noexcept : m_bytes{(uint8_t*)s, len + 1} {}
+    explicit constexpr MutStr(char *s, size_t len) noexcept : m_bytes((uint8_t*)s, len + 1) {}
 
     constexpr auto len() const noexcept -> size_t {
         return m_bytes.len() - 1;
@@ -68,17 +68,17 @@ class Str {
 public:
     template<std::size_t N>
     constexpr Str(const char (&s)[N]) noexcept :
-        m_bytes { (const unsigned char (&)[N])(s) }
+        m_bytes((const unsigned char (&)[N])(s))
     {}
 
     template<std::size_t N>
     constexpr Str(char (&s)[N]) noexcept :
-        m_bytes { (const unsigned char (&)[N])(s) }
+        m_bytes((const unsigned char (&)[N])(s))
     {}
 
-    explicit constexpr Str(const char* s, size_t len) noexcept : m_bytes{(uint8_t const*)s, len + 1} {}
+    explicit constexpr Str(const char* s, size_t len) noexcept : m_bytes((uint8_t const*)s, len + 1) {}
 
-    constexpr Str(const MutStr s) noexcept : m_bytes{s.as_bytes().as_ptr(), s.as_bytes().len()} {}
+    constexpr Str(const MutStr s) noexcept : m_bytes(s.as_bytes().as_ptr(), s.as_bytes().len()) {}
 
     constexpr auto len() const -> size_t {
         return m_bytes.len() - 1;
@@ -136,12 +136,12 @@ inline bool operator==(MutStr const& lhs, Str const& rhs) {
 
 template<std::size_t N>
 inline constexpr auto str(const char (&s)[N]) -> Str {
-    return Str{s};
+    return Str(s);
 }
 
 template<std::size_t N>
 inline constexpr auto str(char (&s)[N]) -> Str {
-    return MutStr{s};
+    return MutStr(s);
 }
 
 inline auto str(const char* s) -> Str {
@@ -153,11 +153,11 @@ inline auto str(char* s) -> MutStr {
 }
 
 inline Str str(std::string const& s) {
-    return Str{&s[0], s.size()};
+    return Str(&s[0], s.size());
 }
 
 inline MutStr str(std::string&& s) {
-    return MutStr{&s[0], s.size()};
+    return MutStr(&s[0], s.size());
 }
 
 }
