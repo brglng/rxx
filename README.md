@@ -33,4 +33,4 @@ or install `rxx` somewhere and use `find_package` to find it:
     target_link_library(YourProject PUBLIC Rxx::Rxx)
     ```
 
-[modeline]: # ( vim: cc=80 tw=80 )
+<!-- vim: set cc=80 tw=80: -->
