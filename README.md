@@ -21,16 +21,16 @@
 `rxx` uses [CMake](https://cmake.org). You can either include `rxx` in your
 build tree:
 
-    ```cmake
-    add_subdirectory(rxx)
-    target_link_library(YourProject PUBLIC Rxx::Rxx)
-    ```
+```cmake
+add_subdirectory(rxx)
+target_link_library(YourProject PUBLIC Rxx::Rxx)
+```
  
 or install `rxx` somewhere and use `find_package` to find it:
 
-    ```cmake
-    find_package(rxx)
-    target_link_library(YourProject PUBLIC Rxx::Rxx)
-    ```
+```cmake
+find_package(rxx)
+target_link_library(YourProject PUBLIC Rxx::Rxx)
+```
 
-<!-- vim: set cc=80 tw=80: -->
+<!-- vim: set cc=80 tw=80 sw=4 sts=4 et: -->
