@@ -32,4 +32,9 @@
 *.app
 
 .ycm_extra_conf.py
-.ycm_extra_conf.pyc
+
+/build/
+/cmake-build-*/
+.ccls
+.ccls-cache/
+*.pyc
