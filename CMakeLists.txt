@@ -65,6 +65,9 @@ if(RXX_ENABLE_TESTING)
   add_subdirectory(tests)
 endif()
 
+export(TARGETS Rxx NAMESPACE Rxx FILE RxxTargets.cmake)
+export(PACKAGE Rxx)
+
 if(${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
   install(FILES README.md CHANGELOG.md LICENSE DESTINATION .)
 
