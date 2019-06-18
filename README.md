@@ -29,7 +29,7 @@ target_link_library(YourProject PUBLIC Rxx::Rxx)
 or install `rxx` somewhere and use `find_package` to find it:
 
 ```cmake
-find_package(rxx)
+find_package(Rxx)
 target_link_library(YourProject PUBLIC Rxx::Rxx)
 ```
 
