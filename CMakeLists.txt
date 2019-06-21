@@ -51,27 +51,27 @@ set(${PROJECT_NAME}_full_configuration "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -
 include(GNUInstallDirs)
 include(RxxTargetProperties)
 
-add_library(Rxx INTERFACE)
-target_include_directories(Rxx INTERFACE
+add_library(rxx INTERFACE)
+target_include_directories(rxx INTERFACE
   $<INSTALL_INTERFACE:include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   )
-target_compile_features(Rxx INTERFACE ${rxx_compile_features})
-target_compile_definitions(Rxx INTERFACE ${rxx_compile_definitions})
-target_link_libraries(Rxx INTERFACE $<$<PLATFORM_ID:Linux>:rt dl pthread m>)
-add_library(Rxx::Rxx ALIAS Rxx)
+target_compile_features(rxx INTERFACE ${rxx_compile_features})
+target_compile_definitions(rxx INTERFACE ${rxx_compile_definitions})
+target_link_libraries(rxx INTERFACE $<$<PLATFORM_ID:Linux>:rt dl pthread m>)
+add_library(Rxx::rxx ALIAS rxx)
 
 if(RXX_ENABLE_TESTING)
   add_subdirectory(tests)
 endif()
 
-export(TARGETS Rxx NAMESPACE Rxx FILE RxxTargets.cmake)
+export(TARGETS rxx NAMESPACE Rxx FILE RxxTargets.cmake)
 export(PACKAGE Rxx)
 
 if(${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
   install(FILES README.md CHANGELOG.md LICENSE DESTINATION .)
 
-  install(TARGETS Rxx EXPORT RxxTargets
+  install(TARGETS rxx EXPORT RxxTargets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
