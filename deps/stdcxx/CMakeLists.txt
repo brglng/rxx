@@ -1,4 +1,4 @@
-if(NOT TARGET stdcxx)
+if(NOT TARGET stdcxx::stdcxx)
   execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-libgcc-file-name OUTPUT_VARIABLE GCC_LIB)
   get_filename_component(GCC_ROOT ${GCC_LIB} DIRECTORY)
   find_library(stdcxx_LIBRARIES libstdc++.a PATHS ${GCC_ROOT} NO_DEFAULT_PATH)
