@@ -51,6 +51,8 @@ set(${PROJECT_NAME}_full_configuration "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -
 include(GNUInstallDirs)
 include(RxxTargetProperties)
 
+add_subdirectory(deps)
+
 add_library(rxx INTERFACE)
 target_include_directories(rxx INTERFACE
   $<INSTALL_INTERFACE:include>
@@ -58,7 +60,9 @@ target_include_directories(rxx INTERFACE
   )
 target_compile_features(rxx INTERFACE ${rxx_compile_features})
 target_compile_definitions(rxx INTERFACE ${rxx_compile_definitions})
-target_link_libraries(rxx INTERFACE $<$<PLATFORM_ID:Linux>:rt dl pthread m>)
+target_link_libraries(rxx INTERFACE
+  $<$<PLATFORM_ID:Linux>:rt dl pthread m>
+  )
 add_library(Rxx::rxx ALIAS rxx)
 
 if(RXX_ENABLE_TESTING)
