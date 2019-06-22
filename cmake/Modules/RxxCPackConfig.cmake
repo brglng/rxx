@@ -23,5 +23,5 @@ set(CPACK_SOURCE_IGNORE_FILES
   \\\\.ccls-cache
   \\\\.clang-format
   )
-set(CPACK_SOURCE_GENERATOR "TGZ")
+set(CPACK_SOURCE_GENERATOR "TXZ")
 include(CPack)
