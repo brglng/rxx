@@ -44,15 +44,15 @@ TEST_CASE("Var visit works") {
     Visitor visitor;
 
     v = 123;
-    visit(v, visitor);
+    visit(visitor, v);
     REQUIRE(visitor.index() == v.index() + 1);
 
     v = 1.0f;
-    visit(v, visitor);
+    visit(visitor, v);
     REQUIRE(visitor.index() == v.index() + 1);
 
     v = nullptr;
-    visit(v, visitor);
+    visit(visitor, v);
     REQUIRE(visitor.index() == v.index() + 1);
 }
 

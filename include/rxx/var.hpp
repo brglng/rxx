@@ -289,33 +289,33 @@ template<typename... Ts> constexpr rxx::var::impl::MoveAssignFunc*      rxx::Var
 template<typename... Ts> constexpr rxx::var::impl::CopyConstructFunc*   rxx::Var<Ts...>::m_copy_construct_funcs[];
 template<typename... Ts> constexpr rxx::var::impl::CopyAssignFunc*      rxx::Var<Ts...>::m_copy_assign_funcs[];
 
-template<class R, class... Ts, class V>
-inline constexpr R visit(Var<Ts...>& var, V&& v) {
+template<class R, class V, class... Ts>
+inline constexpr R visit(V&& v, Var<Ts...>& var) {
     return rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[var.index() + 1](rxx::static_forward<V>(v), var.storage());
 }
 
-template<class R, class... Ts, class V>
-inline constexpr R visit(Var<Ts...> const& var, V&& v) {
+template<class R, class V, class... Ts>
+inline constexpr R visit(V&& v, Var<Ts...> const& var) {
     return rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[var.index() + 1](rxx::static_forward<V>(v), var.storage());
 }
 
-template<class R, class... Ts, class V>
-inline constexpr R visit(Var<Ts...>&& var, V&& v) {
+template<class R, class V, class... Ts>
+inline constexpr R visit(V&& v, Var<Ts...>&& var) {
     return rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[var.index() + 1](rxx::static_forward<V>(v), var.storage());
 }
 
-template<class... Ts, class V>
-inline void visit(Var<Ts...>& var, V&& v) {
+template<class V, class... Ts>
+inline void visit(V&& v, Var<Ts...>& var) {
     rxx::var::impl::VisitDispatcher<void, V, Ts...>::funcs[var.index() + 1](rxx::static_forward<V>(v), var.storage());
 }
 
-template<class... Ts, class V>
-inline void visit(Var<Ts...> const& var, V&& v) {
+template<class V, class... Ts>
+inline void visit(V&& v, Var<Ts...> const& var) {
     rxx::var::impl::VisitDispatcher<void, V, Ts...>::funcs[var.index() + 1](rxx::static_forward<V>(v), var.storage());
 }
 
-template<class... Ts, class V>
-inline void visit(Var<Ts...>&& var, V&& v) {
+template<class V, class... Ts>
+inline void visit(V&& v, Var<Ts...>&& var) {
     rxx::var::impl::VisitDispatcher<void, V, Ts...>::funcs[var.index() + 1](rxx::static_forward<V>(v), var.storage());
 }
 
