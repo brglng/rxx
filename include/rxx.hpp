@@ -13,6 +13,6 @@
 #include "rxx/string.hpp"
 #include "rxx/type_traits.hpp"
 #include "rxx/utility.hpp"
-#include "rxx/variant.hpp"
+#include "rxx/var.hpp"
 
 #endif /* end of include guard: __RXX_HPP__ */

@@ -131,8 +131,8 @@ constexpr auto slice(T* ptr, size_t len) -> Slice<T> {
 }
 
 template<typename... Args>
-constexpr auto slice(Args&&... args) -> Slice<decay_t<common_type_t<Args...>>> {
-    using T = decay_t<common_type_t<Args...>>;
+constexpr auto slice(Args&&... args) -> Slice<rxx::remove_reference_t<rxx::common_type_t<Args...>>> {
+    using T = rxx::remove_reference_t<rxx::common_type_t<Args...>>;
     return T(static_forward<Args>(args)...);
 }
 
