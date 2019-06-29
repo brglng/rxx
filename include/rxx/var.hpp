@@ -54,11 +54,11 @@ typedef void DestroyFunc(void* storage);
 
 template<typename T> struct Move {
     static void construct(void* from, void* to) {
-        new (to) T(std::move(*reinterpret_cast<T*>(from)));
+        new (to) T(rxx::move(*reinterpret_cast<T*>(from)));
     }
 
     static void assign(void* from, void* to) {
-        *reinterpret_cast<T*>(to) = std::move(*reinterpret_cast<T*>(from));
+        *reinterpret_cast<T*>(to) = rxx::move(*reinterpret_cast<T*>(from));
     }
 };
 
@@ -211,7 +211,7 @@ public:
     template<typename T>
     Var(T&& t) : m_type_index(rxx::var::impl::TypeIndex<typename rxx::var::impl::BestMatch<T&&, Ts...>::type, Ts...>::value) {
         using U = typename rxx::var::impl::BestMatch<T&&, Ts...>::type;
-        new (&m_storage) U(std::move(t));
+        new (&m_storage) U(rxx::move(t));
     }
 
     ~Var() {
@@ -291,39 +291,39 @@ template<typename... Ts> constexpr rxx::var::impl::CopyAssignFunc*      rxx::Var
 
 template<class R, class V, class... Ts>
 inline constexpr R visit(V&& v, Var<Ts...>& var) {
-    return rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[var.index() + 1](rxx::static_forward<V>(v), var.storage());
+    return rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[var.index() + 1](rxx::forward<V>(v), var.storage());
 }
 
 template<class R, class V, class... Ts>
 inline constexpr R visit(V&& v, Var<Ts...> const& var) {
-    return rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[var.index() + 1](rxx::static_forward<V>(v), var.storage());
+    return rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[var.index() + 1](rxx::forward<V>(v), var.storage());
 }
 
 template<class R, class V, class... Ts>
 inline constexpr R visit(V&& v, Var<Ts...>&& var) {
-    return rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[var.index() + 1](rxx::static_forward<V>(v), var.storage());
+    return rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[var.index() + 1](rxx::forward<V>(v), var.storage());
 }
 
 template<class V, class... Ts>
 inline void visit(V&& v, Var<Ts...>& var) {
-    rxx::var::impl::VisitDispatcher<void, V, Ts...>::funcs[var.index() + 1](rxx::static_forward<V>(v), var.storage());
+    rxx::var::impl::VisitDispatcher<void, V, Ts...>::funcs[var.index() + 1](rxx::forward<V>(v), var.storage());
 }
 
 template<class V, class... Ts>
 inline void visit(V&& v, Var<Ts...> const& var) {
-    rxx::var::impl::VisitDispatcher<void, V, Ts...>::funcs[var.index() + 1](rxx::static_forward<V>(v), var.storage());
+    rxx::var::impl::VisitDispatcher<void, V, Ts...>::funcs[var.index() + 1](rxx::forward<V>(v), var.storage());
 }
 
 template<class V, class... Ts>
 inline void visit(V&& v, Var<Ts...>&& var) {
-    rxx::var::impl::VisitDispatcher<void, V, Ts...>::funcs[var.index() + 1](rxx::static_forward<V>(v), var.storage());
+    rxx::var::impl::VisitDispatcher<void, V, Ts...>::funcs[var.index() + 1](rxx::forward<V>(v), var.storage());
 }
 
 namespace var {
 
 template<class... Args, class T>
 inline auto make(T&& value) -> Var<rxx::remove_reference_t<Args>...> {
-    return Var<rxx::remove_reference_t<Args>...>(rxx::static_forward<T>(value));
+    return Var<rxx::remove_reference_t<Args>...>(rxx::forward<T>(value));
 }
 
 } // namespace var

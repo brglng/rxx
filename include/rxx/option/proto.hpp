@@ -1,7 +1,7 @@
 #ifndef __RXX_OPTION_PROTO_HPP__
 #define __RXX_OPTION_PROTO_HPP__
 
-#include <type_traits>
+#include "rxx/type_traits.hpp"
 
 namespace rxx {
 namespace option {
@@ -20,7 +20,7 @@ template<>              class Option<void>;
 template<typename T>    class Option<T&>;
 
 template<typename T>
-inline auto Some(T&& value) -> Option<typename std::decay<T>::type>;
+inline auto Some(T&& value) -> Option<rxx::remove_reference_t<T>>;
 
 template<typename T> struct is_option : std::false_type {};
 template<typename T> struct is_option<Option<T>> : std::true_type {};

@@ -10,9 +10,9 @@ template<typename T>
 template<typename E>
 inline auto Option<T>::ok_or(E&& err) noexcept -> Result<T, E> {
     if (inited()) {
-        return Ok(static_move(val()));
+        return Ok(rxx::move(val()));
     } else {
-        return Err(static_forward<E>(err));
+        return Err(rxx::forward<E>(err));
     }
 }
 
@@ -22,7 +22,7 @@ inline auto Option<T>::ok_or(E&& err) const noexcept -> Result<T, E> {
     if (inited()) {
         return Ok(val());
     } else {
-        return Err(static_forward<E>(err));
+        return Err(rxx::forward<E>(err));
     }
 }
 
@@ -33,9 +33,9 @@ enable_if_t<!std::is_void<invoke_result_t<decay_t<F>>>::value,
             Result<T, invoke_result_t<decay_t<F>>>>
 Option<T>::ok_or_else(F&& err) {
     if (inited()) {
-        return Ok(static_move(val()));
+        return Ok(rxx::move(val()));
     } else {
-        return Err(invoke(static_forward<F>(err)));
+        return Err(rxx::invoke(rxx::forward<F>(err)));
     }
 }
 
@@ -45,9 +45,9 @@ inline
 enable_if_t<std::is_void<invoke_result_t<decay_t<F>>>::value, Result<T, void>>
 Option<T>::ok_or_else(F&& err) {
     if (inited()) {
-        return Ok(static_move(val()));
+        return Ok(rxx::move(val()));
     } else {
-        invoke(static_forward<F>(err));
+        rxx::invoke(rxx::forward<F>(err));
         return Err();
     }
 }
@@ -61,7 +61,7 @@ Option<T>::ok_or_else(F&& err) const {
     if (inited()) {
         return Ok(val());
     } else {
-        return Err(invoke(static_forward<F>(err)));
+        return Err(rxx::invoke(rxx::forward<F>(err)));
     }
 }
 
@@ -73,7 +73,7 @@ Option<T>::ok_or_else(F&& err) const {
     if (inited()) {
         return Ok(val());
     } else {
-        invoke(static_forward<F>(err));
+        rxx::invoke(rxx::forward<F>(err));
         return Err();
     }
 }

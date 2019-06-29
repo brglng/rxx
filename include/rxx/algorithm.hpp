@@ -6,13 +6,13 @@
 namespace rxx {
 
 template<class T>
-constexpr const T& static_max(T const& a) {
+constexpr const T& max(T const& a) {
     return a;
 }
 
 template<class T, class... Args>
-constexpr const T& static_max(T const& a, Args const&... args) {
-    return a > static_max(args...) ? a : static_max(args...);
+constexpr const T& max(T const& a, Args const&... args) {
+    return a > rxx::max(args...) ? a : rxx::max(args...);
 }
 
 }

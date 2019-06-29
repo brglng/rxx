@@ -9,7 +9,7 @@ namespace rxx {
 template<typename T, typename E>
 inline auto Result<T, E>::ok() -> Option<T> {
     if (is_ok()) {
-        return Some(static_move(value()));
+        return Some(rxx::move(value()));
     } else {
         return None;
     }
@@ -27,7 +27,7 @@ inline auto Result<T, E>::ok() const -> Option<T> {
 template<typename T, typename E>
 inline auto Result<T, E>::err() -> Option<E> {
     if (is_err()) {
-        return Some(static_move(error()));
+        return Some(rxx::move(error()));
     } else {
         return None;
     }
@@ -50,7 +50,7 @@ inline auto Result<void, E>::ok() const -> Option<void> {
 template<typename E>
 inline auto Result<void, E>::err() -> Option<E> {
     if (is_err()) {
-        return Some(static_move(error()));
+        return Some(rxx::move(error()));
     } else {
         return None;
     }
@@ -67,7 +67,7 @@ inline auto Result<void, E>::err() const -> Option<E> {
 
 template<typename T>
 inline auto Result<T, void>::ok() -> Option<T> {
-    return Some(static_move(value()));
+    return Some(rxx::move(value()));
 }
 
 template<typename T>

@@ -117,7 +117,7 @@ public:
 
 template<typename T, std::size_t N>
 constexpr auto slice(T (&&a)[N]) -> Slice<T> {
-    return Slice<T>(std::forward<T[N]>(a));
+    return Slice<T>(rxx::forward<T[N]>(a));
 }
 
 template<typename T, std::size_t N>
@@ -133,7 +133,7 @@ constexpr auto slice(T* ptr, size_t len) -> Slice<T> {
 template<typename... Args>
 constexpr auto slice(Args&&... args) -> Slice<rxx::remove_reference_t<rxx::common_type_t<Args...>>> {
     using T = rxx::remove_reference_t<rxx::common_type_t<Args...>>;
-    return T(static_forward<Args>(args)...);
+    return T(rxx::forward<Args>(args)...);
 }
 
 }

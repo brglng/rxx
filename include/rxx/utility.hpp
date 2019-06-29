@@ -20,25 +20,21 @@ template <size_t I> struct in_place_index_t {
     explicit in_place_index_t() = default;
 };
 
-template <class T> inline constexpr T&& static_forward(typename std::remove_reference<T>::type& t) noexcept
-{
+template <class T> inline constexpr T&& forward(typename std::remove_reference<T>::type& t) noexcept {
   return static_cast<T&&>(t);
 }
 
-template <class T> inline constexpr T&& static_forward(typename std::remove_reference<T>::type&& t) noexcept
-{
+template <class T> inline constexpr T&& forward(typename std::remove_reference<T>::type&& t) noexcept {
     static_assert(!std::is_lvalue_reference<T>::value, "!!");
     return static_cast<T&&>(t);
 }
 
-template <class T> inline constexpr typename std::remove_reference<T>::type&& static_move(T&& t) noexcept
-{
+template <class T> inline constexpr typename std::remove_reference<T>::type&& move(T&& t) noexcept {
     return static_cast<typename std::remove_reference<T>::type&&>(t);
 }
 
 template <typename T>
-struct has_overloaded_addressof
-{
+struct has_overloaded_addressof {
   template <class X>
   constexpr static bool has_overload(...) { return false; }
   
@@ -49,14 +45,12 @@ struct has_overloaded_addressof
 };
 
 template <typename T, RXX_REQUIRES(!has_overloaded_addressof<T>)>
-constexpr T* static_addressof(T& ref)
-{
+constexpr T* addressof(T& ref) {
   return &ref;
 }
 
 template <typename T, RXX_REQUIRES(has_overloaded_addressof<T>)>
-T* static_addressof(T& ref)
-{
+T* addressof(T& ref) {
   return std::addressof(ref);
 }
 

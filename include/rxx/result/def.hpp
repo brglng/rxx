@@ -6,7 +6,7 @@
 #include <utility>
 #include <algorithm>
 #include <cassert>
-#include "rxx/invoke.hpp"
+#include "rxx/rxx::invoke.hpp"
 #include "rxx/option/proto.hpp"
 #include "rxx/result/proto.hpp"
 #include "rxx/str.hpp"
@@ -25,7 +25,7 @@ private:
     }
 
     T&& value() && noexcept {
-        return static_move(*(T*)(&m_buffer));
+        return rxx::move(*(T*)(&m_buffer));
     }
 
     constexpr T const& value() const& noexcept {
@@ -45,7 +45,7 @@ private:
     }
 
     E&& error() && noexcept {
-        return static_move(*(E*)(&m_buffer));
+        return rxx::move(*(E*)(&m_buffer));
     }
 
     constexpr E const& error() const& noexcept {
@@ -71,7 +71,7 @@ private:
 public:
     explicit Result(T&& value) noexcept(std::is_nothrow_move_constructible<T>::value)
         : m_is_ok(true) {
-        new (valueptr()) T(static_move(value));
+        new (valueptr()) T(rxx::move(value));
     }
 
     explicit Result(T const& value) noexcept(std::is_nothrow_copy_assignable<T>::value)
@@ -81,7 +81,7 @@ public:
 
     explicit Result(E&& err) noexcept(std::is_nothrow_move_constructible<E>::value)
         : m_is_ok(false) {
-        new (errorptr()) E(static_move(err));
+        new (errorptr()) E(rxx::move(err));
     }
 
     explicit Result(E const& err) noexcept(std::is_nothrow_copy_constructible<E>::value)
@@ -91,12 +91,12 @@ public:
 
     Result(result::Ok<T>&& value) noexcept(std::is_nothrow_move_constructible<T>::value)
         : m_is_ok(true) {
-        new (valueptr()) T(static_move(value.m_ok));
+        new (valueptr()) T(rxx::move(value.m_ok));
     }
 
     Result(result::Err<E>&& err) noexcept(std::is_nothrow_move_constructible<E>::value)
         : m_is_ok(false) {
-        new (errorptr()) E(static_move(err.m_err));
+        new (errorptr()) E(rxx::move(err.m_err));
     }
 
     Result(result::Ok<T> const& value) noexcept(std::is_nothrow_copy_constructible<T>::value)
@@ -112,9 +112,9 @@ public:
     Result(Result&& that) noexcept(std::is_nothrow_move_constructible<T>::value && std::is_nothrow_move_constructible<E>::value)
         : m_is_ok(that.m_is_ok) {
         if (m_is_ok) {
-            new (valueptr()) T(static_move(that.value()));
+            new (valueptr()) T(rxx::move(that.value()));
         } else {
-            new (errorptr()) E(static_move(that.error()));
+            new (errorptr()) E(rxx::move(that.error()));
         }
     }
 
@@ -136,9 +136,9 @@ public:
             destroy();
             m_is_ok = that.m_is_ok;
             if (that.m_is_ok) {
-                value() = static_move(that.value());
+                value() = rxx::move(that.value());
             } else {
-                error() = static_move(that.error());
+                error() = rxx::move(that.error());
             }
         }
         return *this;
@@ -160,7 +160,7 @@ public:
     auto operator=(result::Ok<T>&& value) noexcept(std::is_nothrow_move_assignable<T>::value) -> Result& {
         destroy();
         m_is_ok = true;
-        value() = static_move(value.m_ok);
+        value() = rxx::move(value.m_ok);
         return *this;
     }
 
@@ -174,7 +174,7 @@ public:
     auto operator=(result::Err<E>&& err) noexcept(std::is_nothrow_move_assignable<E>::value) -> Result& {
         destroy();
         m_is_ok = true;
-        error() = static_move(err.m_err);
+        error() = rxx::move(err.m_err);
         return *this;
     }
 
@@ -215,9 +215,9 @@ public:
         Result<invoke_result_t<decay_t<F>, T&>, E>>::type
     map(F&& op) {
         if (is_ok()) {
-            return Ok(invoke(static_forward<F>(op), value()));
+            return Ok(rxx::invoke(rxx::forward<F>(op), value()));
         } else {
-            return Err(static_move(error()));
+            return Err(rxx::move(error()));
         }
     }
 
@@ -227,10 +227,10 @@ public:
         Result<void, E>>::type
     map(F&& op) {
         if (is_ok()) {
-            invoke(static_forward<F>(op), value());
+            rxx::invoke(rxx::forward<F>(op), value());
             return Ok();
         } else {
-            return Err(static_move(error()));
+            return Err(rxx::move(error()));
         }
     }
 
@@ -240,9 +240,9 @@ public:
         Result<invoke_result_t<decay_t<F>, T&>, E>>::type
     map(F&& op) const {
         if (is_ok()) {
-            return Ok(invoke(static_forward<F>(op), value()));
+            return Ok(rxx::invoke(rxx::forward<F>(op), value()));
         } else {
-            return Err(static_move(error()));
+            return Err(rxx::move(error()));
         }
     }
 
@@ -252,9 +252,9 @@ public:
         Result<void, E>>::type
     map(F&& op) const {
         if (is_ok()) {
-            return Ok(invoke(static_forward<F>(op), value()));
+            return Ok(rxx::invoke(rxx::forward<F>(op), value()));
         } else {
-            return Err(static_move(error()));
+            return Err(rxx::move(error()));
         }
     }
 
@@ -268,9 +268,9 @@ public:
     >::type
     map_or_else(F&& fallback, M&& map_func) {
         if (is_ok()) {
-            return invoke(static_forward<M>(map_func), value());
+            return rxx::invoke(rxx::forward<M>(map_func), value());
         } else {
-            return invoke(static_forward<F>(fallback), error());
+            return rxx::invoke(rxx::forward<F>(fallback), error());
         }
     }
 
@@ -284,9 +284,9 @@ public:
     >::type
     map_or_else(F&& fallback, M&& map_func) const {
         if (is_ok()) {
-            return invoke(static_forward<M>(map_func), value());
+            return rxx::invoke(rxx::forward<M>(map_func), value());
         } else {
-            return invoke(static_forward<F>(fallback), error());
+            return rxx::invoke(rxx::forward<F>(fallback), error());
         }
     }
 
@@ -296,9 +296,9 @@ public:
         Result<T, invoke_result_t<decay_t<O>, E&>>>::type
     map_err(O&& op) {
         if (!is_ok()) {
-            return Err(invoke(static_forward<O>(op), error()));
+            return Err(rxx::invoke(rxx::forward<O>(op), error()));
         } else {
-            return Ok(static_move(value()));
+            return Ok(rxx::move(value()));
         }
     }
 
@@ -308,10 +308,10 @@ public:
         Result<T, void>>::type
     map_err(O&& op) {
         if (!is_ok()) {
-            invoke(static_forward<O>(op), error());
+            rxx::invoke(rxx::forward<O>(op), error());
             return Err();
         } else {
-            return Ok(static_move(value()));
+            return Ok(rxx::move(value()));
         }
     }
 
@@ -321,7 +321,7 @@ public:
         Result<T, invoke_result_t<decay_t<O>, E const&>>>::type
     map_err(O&& op) const {
         if (!is_ok()) {
-            return Err(invoke(static_forward<O>(op), error()));
+            return Err(rxx::invoke(rxx::forward<O>(op), error()));
         } else {
             return Ok(value());
         }
@@ -333,7 +333,7 @@ public:
         Result<T, void>>::type
     map_err(O&& op) const {
         if (!is_ok()) {
-            invoke(static_forward<O>(op), error());
+            rxx::invoke(rxx::forward<O>(op), error());
             return Err();
         } else {
             return Ok(value());
@@ -345,7 +345,7 @@ public:
         if (res.is_ok()) {
             return res;
         } else {
-            return Err(static_move(error()));
+            return Err(rxx::move(error()));
         }
     }
 
@@ -354,7 +354,7 @@ public:
         if (res.is_ok()) {
             return res;
         } else {
-            return Err(static_move(error()));
+            return Err(rxx::move(error()));
         }
     }
 
@@ -367,9 +367,9 @@ public:
     >::type
     and_then(F&& op) {
         if (is_ok()) {
-            return invoke(op, value());
+            return rxx::invoke(op, value());
         } else {
-            return Err(static_move(error()));
+            return Err(rxx::move(error()));
         }
     }
 
@@ -382,7 +382,7 @@ public:
     >::type
     and_then(F&& op) const {
         if (is_ok()) {
-            return invoke(op, value());
+            return rxx::invoke(op, value());
         } else {
             return Err(error());
         }
@@ -393,7 +393,7 @@ public:
         if (is_err()) {
             return res;
         } else {
-            return Ok(static_move(value()));
+            return Ok(rxx::move(value()));
         }
     }
 
@@ -415,9 +415,9 @@ public:
     >::type
     or_else(O&& op) {
         if (is_err()) {
-            return invoke(op, error());
+            return rxx::invoke(op, error());
         } else {
-            return Ok(static_move(value()));
+            return Ok(rxx::move(value()));
         }
     }
 
@@ -430,7 +430,7 @@ public:
     >::type
     or_else(O&& op) const {
         if (is_err()) {
-            return invoke(op, error());
+            return rxx::invoke(op, error());
         } else {
             return Ok(value());
         }
@@ -438,7 +438,7 @@ public:
 
     auto unwrap_or(T optb) -> T {
         if (is_ok()) {
-            return static_move(value());
+            return rxx::move(value());
         } else {
             return optb;
         }
@@ -455,9 +455,9 @@ public:
     template<typename F>
     auto unwrap_or_else(F&& op) -> T {
         if (is_ok()) {
-            return static_move(value());
+            return rxx::move(value());
         } else {
-            return invoke(static_forward<F>(op), error());
+            return rxx::invoke(rxx::forward<F>(op), error());
         }
     }
 
@@ -466,13 +466,13 @@ public:
         if (is_ok()) {
             return value();
         } else {
-            return invoke(static_forward<F>(op), error());
+            return rxx::invoke(rxx::forward<F>(op), error());
         }
     }
 
     auto unwrap() -> T {
         assert(is_ok());
-        return static_move(value());
+        return rxx::move(value());
     }
 
     auto unwrap() const -> T {
@@ -485,7 +485,7 @@ public:
             std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
-        return static_move(value());
+        return rxx::move(value());
     }
 
     auto expect(Str msg) const -> T {
@@ -498,7 +498,7 @@ public:
 
     auto unwrap_err() -> E {
         assert(is_err());
-        return static_move(error());
+        return rxx::move(error());
     }
 
     auto unwrap_err() const -> E {
@@ -511,7 +511,7 @@ public:
             std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
-        return static_move(error());
+        return rxx::move(error());
     }
 
     auto expect_err(Str msg) const -> E {
@@ -519,12 +519,12 @@ public:
             std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
-        return static_move(error());
+        return rxx::move(error());
     }
 
     auto unwrap_or_default() -> T {
         if (is_ok()) {
-            return static_move(value());
+            return rxx::move(value());
         } else {
             return T{};
         }
@@ -550,7 +550,7 @@ private:
     }
 
     E&& error() && noexcept {
-        return static_move(*(E*)(&m_buffer));
+        return rxx::move(*(E*)(&m_buffer));
     }
 
     constexpr E const& error() const& noexcept {
@@ -576,7 +576,7 @@ public:
 
     explicit Result(E&& err) noexcept(std::is_nothrow_move_constructible<E>::value)
         : m_is_ok(false) {
-        new (errorptr()) E(static_move(err));
+        new (errorptr()) E(rxx::move(err));
     }
 
     explicit Result(E const& err) noexcept(std::is_nothrow_copy_constructible<E>::value)
@@ -589,7 +589,7 @@ public:
     Result(result::Err<E>&& err)
         noexcept(std::is_nothrow_move_constructible<E>::value)
         : m_is_ok(false) {
-        new (errorptr()) E(static_move(err.m_err));
+        new (errorptr()) E(rxx::move(err.m_err));
     }
 
     Result(result::Ok<void> const&) : m_is_ok(true) {}
@@ -602,7 +602,7 @@ public:
     Result(Result&& that) noexcept(std::is_nothrow_move_constructible<E>::value)
         : m_is_ok(that.m_is_ok) {
         if (!m_is_ok) {
-            new (errorptr()) E(static_move(that.error()));
+            new (errorptr()) E(rxx::move(that.error()));
         }
     }
 
@@ -622,7 +622,7 @@ public:
             destroy();
             m_is_ok = that.m_is_ok;
             if (!that.m_is_ok) {
-                error() = static_move(that.error());
+                error() = rxx::move(that.error());
             }
         }
         return *this;
@@ -654,7 +654,7 @@ public:
     auto operator=(result::Err<E>&& err) noexcept(std::is_nothrow_move_assignable<E>::value) -> Result& {
         destroy();
         m_is_ok = true;
-        error() = static_move(err.m_err);
+        error() = rxx::move(err.m_err);
         return *this;
     }
 
@@ -691,20 +691,20 @@ public:
     template<typename F>
     auto map(F&& op) -> Result<void, E> {
         if (is_ok()) {
-            invoke(static_forward<F>(op));
+            rxx::invoke(rxx::forward<F>(op));
             return Ok();
         } else {
-            return Err(static_move(error()));
+            return Err(rxx::move(error()));
         }
     }
 
     template<typename F>
     auto map(F&& op) const -> Result<typename invoke_result<typename std::decay<F>::type>::type, E> {
         if (is_ok()) {
-            invoke(static_forward<F>(op));
+            rxx::invoke(rxx::forward<F>(op));
             return Ok();
         } else {
-            return Err(static_move(error()));
+            return Err(rxx::move(error()));
         }
     }
 
@@ -718,9 +718,9 @@ public:
     >::type
     map_or_else(F&& fallback, M&& map_func) {
         if (is_ok()) {
-            return invoke(static_forward<M>(map_func));
+            return rxx::invoke(rxx::forward<M>(map_func));
         } else {
-            return invoke(static_forward<F>(fallback), static_move(error()));
+            return rxx::invoke(rxx::forward<F>(fallback), rxx::move(error()));
         }
     }
 
@@ -734,9 +734,9 @@ public:
     >::type
     map_or_else(F&& fallback, M&& map_func) const {
         if (is_ok()) {
-            return invoke(static_forward<M>(map_func));
+            return rxx::invoke(rxx::forward<M>(map_func));
         } else {
-            return invoke(static_forward<F>(fallback), error());
+            return rxx::invoke(rxx::forward<F>(fallback), error());
         }
     }
 
@@ -746,7 +746,7 @@ public:
         Result<void, invoke_result_t<decay_t<O>, E&>>>::type
     map_err(O&& op) {
         if (!is_ok()) {
-            return Err(invoke(static_forward<O>(op), error()));
+            return Err(rxx::invoke(rxx::forward<O>(op), error()));
         } else {
             return Ok();
         }
@@ -758,7 +758,7 @@ public:
         Result<void, invoke_result_t<decay_t<O>, E&>>>::type
     map_err(O&& op) {
         if (!is_ok()) {
-            invoke(static_forward<O>(op), error());
+            rxx::invoke(rxx::forward<O>(op), error());
             return Err();
         } else {
             return Ok();
@@ -771,7 +771,7 @@ public:
         Result<void, invoke_result_t<decay_t<O>, E const&>>>::type
     map_err(O&& op) const {
         if (!is_ok()) {
-            return Err(invoke(static_forward<O>(op), error()));
+            return Err(rxx::invoke(rxx::forward<O>(op), error()));
         } else {
             return Ok();
         }
@@ -783,7 +783,7 @@ public:
         Result<void, invoke_result_t<decay_t<O>, E const&>>>::type
     map_err(O&& op) const {
         if (!is_ok()) {
-            invoke(static_forward<O>(op), error());
+            rxx::invoke(rxx::forward<O>(op), error());
             return Err();
         } else {
             return Ok();
@@ -795,7 +795,7 @@ public:
         if (res.is_ok()) {
             return res;
         } else {
-            return Err(static_move(error()));
+            return Err(rxx::move(error()));
         }
     }
 
@@ -817,9 +817,9 @@ public:
     >::type
     and_then(F&& op) {
         if (is_ok()) {
-            return invoke(op);
+            return rxx::invoke(op);
         } else {
-            return Err(static_move(error()));
+            return Err(rxx::move(error()));
         }
     }
 
@@ -832,7 +832,7 @@ public:
     >::type
     and_then(F&& op) const {
         if (is_ok()) {
-            return invoke(op);
+            return rxx::invoke(op);
         } else {
             return Err(error());
         }
@@ -865,7 +865,7 @@ public:
     >::type
     or_else(O&& op) {
         if (is_err()) {
-            return invoke(op, error());
+            return rxx::invoke(op, error());
         } else {
             return Ok();
         }
@@ -880,7 +880,7 @@ public:
     >::type
     or_else(O&& op) const {
         if (is_err()) {
-            return invoke(op, error());
+            return rxx::invoke(op, error());
         } else {
             return Ok();
         }
@@ -891,14 +891,14 @@ public:
     template<typename F>
     void unwrap_or_else(F&& op) {
         if (is_err()) {
-            return invoke(static_forward<F>(op), error());
+            return rxx::invoke(rxx::forward<F>(op), error());
         }
     }
 
     template<typename F>
     void unwrap_or_else(F&& op) const {
         if (is_err()) {
-            return invoke(static_forward<F>(op), error());
+            return rxx::invoke(rxx::forward<F>(op), error());
         }
     }
 
@@ -915,7 +915,7 @@ public:
 
     auto unwrap_err() -> E {
         assert(is_err());
-        return static_move(error());
+        return rxx::move(error());
     }
 
     auto unwrap_err() const -> E {
@@ -928,7 +928,7 @@ public:
             std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
-        return static_move(error());
+        return rxx::move(error());
     }
 
     auto expect_err(Str msg) const -> E {
@@ -936,7 +936,7 @@ public:
             std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
-        return static_move(error());
+        return rxx::move(error());
     }
 
     void unwrap_or_default() const {}
@@ -952,7 +952,7 @@ private:
     }
 
     T&& value() && noexcept {
-        return static_move(*(T*)(&m_buffer));
+        return rxx::move(*(T*)(&m_buffer));
     }
 
     constexpr T const& value() const& noexcept {
@@ -973,7 +973,7 @@ private:
 
 public:
     explicit Result(T&& value) noexcept(std::is_nothrow_move_constructible<T>::value) {
-        new (valueptr()) T(static_move(value));
+        new (valueptr()) T(rxx::move(value));
     }
 
     explicit Result(T const& value) noexcept(std::is_nothrow_copy_assignable<T>::value) {
@@ -981,7 +981,7 @@ public:
     }
 
     Result(result::Ok<T>&& value) noexcept(std::is_nothrow_move_constructible<T>::value) {
-        new (valueptr()) T(static_move(value.m_ok));
+        new (valueptr()) T(rxx::move(value.m_ok));
     }
 
     Result(result::Err<void>&&) noexcept {}
@@ -994,7 +994,7 @@ public:
     Result(result::Err<void> const&) noexcept {}
 
     Result(Result&& that) noexcept(std::is_nothrow_move_constructible<T>::value) {
-        new (valueptr()) T(static_move(that.value()));
+        new (valueptr()) T(rxx::move(that.value()));
     }
 
     Result(Result const& that) noexcept(std::is_nothrow_copy_constructible<T>::value) {
@@ -1010,7 +1010,7 @@ public:
     auto operator=(Result&& that) noexcept(std::is_nothrow_move_assignable<T>::value) -> Result& {
         if (this != &that) {
             destroy();
-            value() = static_move(that.value());
+            value() = rxx::move(that.value());
         }
         return *this;
     }
@@ -1025,7 +1025,7 @@ public:
 
     auto operator=(result::Ok<T>&& value) noexcept(std::is_nothrow_move_assignable<T>::value) -> Result& {
         destroy();
-        value() = static_move(value.m_ok);
+        value() = rxx::move(value.m_ok);
         return *this;
     }
 
@@ -1064,7 +1064,7 @@ public:
         !std::is_void<invoke_result_t<decay_t<F>, T&>>::value,
         Result<invoke_result_t<decay_t<F>, T&>, void>>::type
     map(F&& op) {
-        return Ok(invoke(static_forward<F>(op), value()));
+        return Ok(rxx::invoke(rxx::forward<F>(op), value()));
     }
 
     template<typename F>
@@ -1072,7 +1072,7 @@ public:
         std::is_void<invoke_result_t<decay_t<F>, T&>>::value,
         Result<invoke_result_t<decay_t<F>, T&>, void>>::type
     map(F&& op) {
-        invoke(static_forward<F>(op), value());
+        rxx::invoke(rxx::forward<F>(op), value());
         return Ok();
     }
 
@@ -1081,7 +1081,7 @@ public:
         !std::is_void<invoke_result_t<decay_t<F>, T const&>>::value,
         Result<invoke_result_t<decay_t<F>, T&>, void>>::type
     map(F&& op) const {
-        return Ok(invoke(static_forward<F>(op), value()));
+        return Ok(rxx::invoke(rxx::forward<F>(op), value()));
     }
 
     template<typename F>
@@ -1089,7 +1089,7 @@ public:
         std::is_void<invoke_result_t<decay_t<F>, T const&>>::value,
         Result<invoke_result_t<decay_t<F>, T&>, void>>::type
     map(F&& op) const {
-        invoke(static_forward<F>(op), value());
+        rxx::invoke(rxx::forward<F>(op), value());
         return Ok();
     }
 
@@ -1111,7 +1111,7 @@ public:
         typename invoke_result<typename std::decay<F>::type, T&>::type
     >::type
     and_then(F&& op) {
-        return invoke(op, value());
+        return rxx::invoke(op, value());
     }
 
     template<typename F>
@@ -1122,12 +1122,12 @@ public:
         typename invoke_result<typename std::decay<F>::type, T const&>::type
     >::type
     and_then(F&& op) const {
-        return invoke(op, value());
+        return rxx::invoke(op, value());
     }
 
     auto unwrap_or(T optb) -> T {
         if (is_ok()) {
-            return static_move(value());
+            return rxx::move(value());
         } else {
             return optb;
         }
@@ -1142,7 +1142,7 @@ public:
     }
 
     auto unwrap() -> T {
-        return static_move(value());
+        return rxx::move(value());
     }
 
     constexpr auto unwrap() const -> T {
@@ -1150,7 +1150,7 @@ public:
     }
 
     auto expect(Str) -> T {
-        return static_move(value());
+        return rxx::move(value());
     }
 
     constexpr auto expect(Str) const -> T {
@@ -1158,7 +1158,7 @@ public:
     }
 
     auto unwrap_or_default() -> T {
-        return static_move(value());
+        return rxx::move(value());
     }
 
     auto unwrap_or_default() const -> T {
@@ -1212,7 +1212,7 @@ public:
         !std::is_void<invoke_result_t<decay_t<F>>>::value,
         Result<invoke_result_t<decay_t<F>>, void>>::type
     map(F&& op) const {
-        return Ok(invoke(static_forward<F>(op)));
+        return Ok(rxx::invoke(rxx::forward<F>(op)));
     }
 
     template<typename F>
@@ -1220,7 +1220,7 @@ public:
         std::is_void<invoke_result_t<decay_t<F>>>::value,
         Result<invoke_result_t<decay_t<F>>, void>>::type
     map(F&& op) const {
-        invoke(static_forward<F>(op));
+        rxx::invoke(rxx::forward<F>(op));
         return Ok();
     }
 
@@ -1242,7 +1242,7 @@ public:
         typename invoke_result<typename std::decay<F>::type>::type
     >::type
     and_then(F&& op) {
-        return invoke(op);
+        return rxx::invoke(op);
     }
 
     template<typename F>
@@ -1253,7 +1253,7 @@ public:
         typename invoke_result<typename std::decay<F>::type>::type
     >::type
     and_then(F&& op) const {
-        return invoke(op);
+        return rxx::invoke(op);
     }
 
     void unwrap() const {}
@@ -1279,13 +1279,13 @@ class Result<T&&, E&&> {
 };
 
 template<typename T>
-inline auto Ok(T&& value) -> result::Ok<typename std::decay<T>::type> {
-    return result::Ok<typename std::decay<T>::type>(static_forward<T>(value));
+inline auto Ok(T&& value) -> result::Ok<rxx::remove_reference_t<T>> {
+    return result::Ok<rxx::remove_reference_t<T>>(rxx::forward<T>(value));
 }
 
 template<typename E>
-inline auto Err(E&& err) -> result::Err<typename std::decay<E>::type> {
-    return result::Err<typename std::decay<E>::type>{static_forward<E>(err)};
+inline auto Err(E&& err) -> result::Err<rxx::remove_reference_t<T>> {
+    return result::Err<rxx::remove_reference_t<T>>{rxx::forward<E>(err)};
 }
 
 #define RXX_TRY(...) ({                     \

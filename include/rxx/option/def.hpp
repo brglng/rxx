@@ -3,7 +3,7 @@
 
 #include <cstdio>
 #include <cassert>
-#include "rxx/invoke.hpp"
+#include "rxx/rxx::invoke.hpp"
 #include "rxx/type_traits.hpp"
 #include "rxx/utility.hpp"
 #include "rxx/str.hpp"
@@ -26,7 +26,7 @@ union Storage
     constexpr Storage(TrivialInit) noexcept : m_dummy{} {};
 
     template<class... Args>
-    constexpr Storage(Args&&... args) : m_value(static_forward<Args>(args)...) {}
+    constexpr Storage(Args&&... args) : m_value(rxx:forward<Args>(args)...) {}
 
     ~Storage(){}
 };
@@ -40,7 +40,7 @@ union ConstExprStorage
     constexpr ConstExprStorage(TrivialInit) noexcept : m_dummy{} {};
 
     template <class... Args>
-    constexpr ConstExprStorage(Args&&... args) : m_value(static_forward<Args>(args)...) {}
+    constexpr ConstExprStorage(Args&&... args) : m_value(rxx:forward<Args>(args)...) {}
 
     ~ConstExprStorage() = default;
 };
@@ -59,11 +59,11 @@ struct OptionBase
 
     template<class... Args>
     explicit OptionBase(in_place_t, Args&&... args)
-        : m_inited(true), m_storage(static_forward<Args>(args)...) {}
+        : m_inited(true), m_storage(rxx:forward<Args>(args)...) {}
 
     template <class U, class... Args, RXX_REQUIRES(std::is_constructible<T, std::initializer_list<U>>)>
     explicit OptionBase(in_place_t, std::initializer_list<U> il, Args&&... args)
-        : m_inited(true), m_storage(il, static_forward<Args>(args)...) {}
+        : m_inited(true), m_storage(il, rxx:forward<Args>(args)...) {}
 
     ~OptionBase() { if (m_inited) m_storage.m_value.T::~T(); }
 };
@@ -83,11 +83,11 @@ struct ConstExprOptionBase
 
     template<class... Args>
     explicit constexpr ConstExprOptionBase(in_place_t, Args&&... args)
-        : m_inited(true), m_storage(static_forward<Args>(args)...) {}
+        : m_inited(true), m_storage(rxx:forward<Args>(args)...) {}
 
     template<class U, class... Args, RXX_REQUIRES(std::is_constructible<T, std::initializer_list<U>>)>
     explicit constexpr ConstExprOptionBase(in_place_t, std::initializer_list<U> il, Args&&... args)
-        : m_inited(true), m_storage(il, static_forward<Args>(args)...) {}
+        : m_inited(true), m_storage(il, rxx:forward<Args>(args)...) {}
 
     ~ConstExprOptionBase() = default;
 };
@@ -116,11 +116,11 @@ class Option : private option::impl::Base<T> {
     }
 
     auto valptr() noexcept -> typename std::remove_const<T>::type* {
-        return static_addressof(option::impl::Base<T>::m_storage.m_value);
+        return rxx::addressof(option::impl::Base<T>::m_storage.m_value);
     }
 
     constexpr auto valptr() const noexcept -> T const* {
-        return static_addressof(option::impl::Base<T>::m_storage.m_value);
+        return rxx::addressof(option::impl::Base<T>::m_storage.m_value);
     }
 
     constexpr const T& val() const& {
@@ -136,16 +136,16 @@ class Option : private option::impl::Base<T> {
     }
 
     template<class... Args>
-    void init(Args&&... args) noexcept(noexcept(T(static_forward<Args>(args)...))) {
+    void init(Args&&... args) noexcept(noexcept(T(rxx:forward<Args>(args)...))) {
         assert(!inited());
-        ::new (static_cast<void*>(valptr())) T(static_forward<Args>(args)...);
+        ::new (static_cast<void*>(valptr())) T(rxx:forward<Args>(args)...);
         set_inited(true);
     }
 
     template<class U, class... Args>
-    void init(std::initializer_list<U> il, Args&&... args) noexcept(noexcept(T(il, static_forward<Args>(args)...))) {
+    void init(std::initializer_list<U> il, Args&&... args) noexcept(noexcept(T(il, rxx:forward<Args>(args)...))) {
         assert(!inited());
-        ::new (static_cast<void*>(valptr())) T(il, static_forward<Args>(args)...);
+        ::new (static_cast<void*>(valptr())) T(il, rxx:forward<Args>(args)...);
         set_inited(true);
     }
 
@@ -184,11 +184,11 @@ public:
 
     template<class... Args>
     explicit constexpr Option(in_place_t, Args&&... args)
-        : option::impl::Base<T>(in_place_t(), static_forward<Args>(args)...) {}
+        : option::impl::Base<T>(in_place_t(), rxx:forward<Args>(args)...) {}
 
     template<class U, class... Args, RXX_REQUIRES(std::is_constructible<T, std::initializer_list<U>>)>
     explicit constexpr Option(in_place_t, std::initializer_list<U> il, Args&&... args)
-        : option::impl::Base<T>(in_place_t(), il, static_forward<Args>(args)...) {}
+        : option::impl::Base<T>(in_place_t(), il, rxx:forward<Args>(args)...) {}
 
     ~Option() = default;
 
@@ -292,7 +292,7 @@ public:
         if (inited()) {
             return static_move(val());
         } else {
-            return invoke(static_forward<F>(f));
+            return rxx::invoke(rxx:forward<F>(f));
         }
     }
 
@@ -301,7 +301,7 @@ public:
         if (inited()) {
             return val();
         } else {
-            return invoke(static_forward<F>(f));
+            return rxx::invoke(rxx:forward<F>(f));
         }
     }
 
@@ -310,7 +310,7 @@ public:
                 Option<invoke_result_t<decay_t<F>, T&>>>
     map(F&& f) {
         if (inited()) {
-            return Some(invoke(static_forward<F>(f), val()));
+            return Some(rxx::invoke(rxx:forward<F>(f), val()));
         } else {
             return None;
         }
@@ -320,7 +320,7 @@ public:
     enable_if_t<std::is_void<invoke_result_t<decay_t<F>, T&>>::value, Option<void>>
     map(F&& f) {
         if (inited()) {
-            invoke(static_forward<F>(f), val());
+            rxx::invoke(rxx:forward<F>(f), val());
             return None;
         } else {
             return None;
@@ -332,7 +332,7 @@ public:
                 Option<invoke_result_t<decay_t<F>, T const&>>>
     map(F&& f) const {
         if (inited()) {
-            return Some(invoke(static_forward<F>(f), val()));
+            return Some(rxx::invoke(rxx:forward<F>(f), val()));
         } else {
             return None;
         }
@@ -342,7 +342,7 @@ public:
     enable_if_t<std::is_void<invoke_result_t<decay_t<F>, T const&>>::value, Option<void>>
     map(F&& f) const {
         if (inited()) {
-            invoke(static_forward<F>(f), val());
+            rxx::invoke(rxx:forward<F>(f), val());
             return None;
         } else {
             return None;
@@ -352,18 +352,18 @@ public:
     template<typename U, typename F>
     auto map_or(U&& def, F&& f) -> U {
         if (inited()) {
-            return invoke(static_forward<F>(f), val());
+            return rxx::invoke(rxx:forward<F>(f), val());
         } else {
-            return static_forward<U>(def);
+            return rxx:forward<U>(def);
         }
     }
 
     template<typename U, typename F>
     auto map_or(U&& def, F&& f) const -> U {
         if (inited()) {
-            return invoke(static_forward<F>(f), val());
+            return rxx::invoke(rxx:forward<F>(f), val());
         } else {
-            return static_forward<U>(def);
+            return rxx:forward<U>(def);
         }
     }
 
@@ -377,9 +377,9 @@ public:
     >::type
     map_or_else(D&& def, F&& f) {
         if (inited()) {
-            return invoke(static_forward<F>(f), val());
+            return rxx::invoke(rxx:forward<F>(f), val());
         } else {
-            return invoke(static_forward<D>(def));
+            return rxx::invoke(rxx:forward<D>(def));
         }
     }
 
@@ -393,9 +393,9 @@ public:
     >::type
     map_or_else(D&& def, F&& f) {
         if (inited()) {
-            return invoke(static_forward<F>(f), val());
+            return rxx::invoke(rxx:forward<F>(f), val());
         } else {
-            return invoke(static_forward<D>(def));
+            return rxx::invoke(rxx:forward<D>(def));
         }
     }
 
@@ -432,7 +432,7 @@ public:
     template<typename F>
     auto and_then(F&& f) const -> Option<typename invoke_result<typename std::decay<F>::type>::type> {
         if (!inited()) return None;
-        else return invoke(static_forward<F>(f));
+        else return rxx::invoke(rxx:forward<F>(f));
     }
 
     template<typename P>
@@ -440,7 +440,7 @@ public:
         if (!inited()) {
             return None;
         } else {
-            if (invoke(static_forward<P>(predicate), val())) {
+            if (rxx::invoke(rxx:forward<P>(predicate), val())) {
                 return static_move(*this);
             } else {
                 return None;
@@ -453,7 +453,7 @@ public:
         if (!inited()) {
             return None;
         } else {
-            if (invoke(static_forward<P>(predicate), val())) {
+            if (rxx::invoke(rxx:forward<P>(predicate), val())) {
                 return *this;
             } else {
                 return None;
@@ -482,7 +482,7 @@ public:
         if (inited()) {
             return static_move(*this);
         } else {
-            return invoke(static_forward<F>(f));
+            return rxx::invoke(rxx:forward<F>(f));
         }
     }
 
@@ -491,7 +491,7 @@ public:
         if (inited()) {
             return *this;
         } else {
-            return invoke(static_forward<F>(f));
+            return rxx::invoke(rxx:forward<F>(f));
         }
     }
 
@@ -534,7 +534,7 @@ public:
     template<class F>
     auto get_or_insert_with(F&& f) -> T& {
         if (!inited()) {
-            init(invoke(static_forward<F>(f)));
+            init(rxx::invoke(rxx:forward<F>(f)));
         } else {
             return val();
         }
@@ -623,7 +623,7 @@ public:
 
     template<typename U, typename F>
     auto map_or(U&& def) const noexcept -> U {
-        return static_forward<U>(def);
+        return rxx:forward<U>(def);
     }
 
     template<typename D, typename F>
@@ -635,7 +635,7 @@ public:
         typename std::decay<typename invoke_result<typename std::decay<D>::type>::type>::type
     >::type
     map_or_else(D&& def) const {
-        return invoke(static_forward<D>(def));
+        return rxx::invoke(rxx:forward<D>(def));
     }
 
     template<typename E>
@@ -659,7 +659,7 @@ public:
 
     template<typename F>
     auto or_else(F&& f) const -> Option<void> {
-        return invoke(static_forward<F>(f));
+        return rxx::invoke(rxx:forward<F>(f));
     }
 
     auto xor_(Option<void>) const -> Option<void> {
@@ -686,7 +686,7 @@ public:
 
     constexpr Option(option::None) noexcept : m_ptr{nullptr} {}
 
-    explicit constexpr Option(T& t) noexcept : m_ptr{static_addressof(t)} {}
+    explicit constexpr Option(T& t) noexcept : m_ptr{rxx::addressof(t)} {}
 
     Option(T&&) = delete;
 
@@ -784,7 +784,7 @@ public:
         if (inited()) {
             return val();
         } else {
-            return invoke(static_forward<F>(f));
+            return rxx::invoke(rxx:forward<F>(f));
         }
     }
 
@@ -793,7 +793,7 @@ public:
         if (inited()) {
             return val();
         } else {
-            return invoke(static_forward<F>(f));
+            return rxx::invoke(rxx:forward<F>(f));
         }
     }
 
@@ -802,7 +802,7 @@ public:
                 Option<invoke_result_t<decay_t<F>, T&>>>
     map(F&& f) {
         if (inited()) {
-            return Some(invoke(static_forward<F>(f), val()));
+            return Some(rxx::invoke(rxx:forward<F>(f), val()));
         } else {
             return None;
         }
@@ -812,7 +812,7 @@ public:
     enable_if_t<std::is_void<invoke_result_t<decay_t<F>, T&>>::value, Option<void>>
     map(F&& f) {
         if (inited()) {
-            invoke(static_forward<F>(f), val());
+            rxx::invoke(rxx:forward<F>(f), val());
             return None;
         } else {
             return None;
@@ -824,7 +824,7 @@ public:
                 Option<invoke_result_t<decay_t<F>, T&>>>
     map(F&& f) const {
         if (inited()) {
-            return Some(invoke(static_forward<F>(f), val()));
+            return Some(rxx::invoke(rxx:forward<F>(f), val()));
         } else {
             return None;
         }
@@ -834,7 +834,7 @@ public:
     enable_if_t<std::is_void<invoke_result_t<decay_t<F>, T const&>>::value, Option<void>>
     map(F&& f) const {
         if (inited()) {
-            invoke(static_forward<F>(f), val());
+            rxx::invoke(rxx:forward<F>(f), val());
             return None;
         } else {
             return None;
@@ -844,18 +844,18 @@ public:
     template<typename U, typename F>
     auto map_or(U&& def, F&& f) -> U {
         if (inited()) {
-            return invoke(static_forward<F>(f), static_move(val()));
+            return rxx::invoke(rxx:forward<F>(f), static_move(val()));
         } else {
-            return static_forward<U>(def);
+            return rxx:forward<U>(def);
         }
     }
 
     template<typename U, typename F>
     auto map_or(U&& def, F&& f) const -> U {
         if (inited()) {
-            return invoke(static_forward<F>(f), val());
+            return rxx::invoke(rxx:forward<F>(f), val());
         } else {
-            return static_forward<U>(def);
+            return rxx:forward<U>(def);
         }
     }
 
@@ -869,9 +869,9 @@ public:
     >::type
     map_or_else(D&& def, F&& f) {
         if (inited()) {
-            return invoke(static_forward<F>(f), val());
+            return rxx::invoke(rxx:forward<F>(f), val());
         } else {
-            return invoke(static_forward<D>(def));
+            return rxx::invoke(rxx:forward<D>(def));
         }
     }
 
@@ -885,9 +885,9 @@ public:
     >::type
     map_or_else(D&& def, F&& f) {
         if (inited()) {
-            return invoke(static_forward<F>(f), val());
+            return rxx::invoke(rxx:forward<F>(f), val());
         } else {
-            return invoke(static_forward<D>(def));
+            return rxx::invoke(rxx:forward<D>(def));
         }
     }
 
@@ -896,7 +896,7 @@ public:
     //     if (inited()) {
     //         return Ok(static_move(val()));
     //     } else {
-    //         return Err(std::static_forward<E>(err));
+    //         return Err(std::rxx:forward<E>(err));
     //     }
     // }
 
@@ -905,7 +905,7 @@ public:
     //     if (inited()) {
     //         return Ok(static_move(val()));
     //     } else {
-    //         return Err(invoke(std::static_forward<F>(err)));
+    //         return Err(rxx::invoke(std::rxx:forward<F>(err)));
     //     }
     // }
 
@@ -918,7 +918,7 @@ public:
     template<typename F>
     auto and_then(F&& f) const -> Option<typename invoke_result<typename std::decay<F>::type>::type> {
         if (!inited()) return None;
-        else return invoke(static_forward<F>(f));
+        else return rxx::invoke(rxx:forward<F>(f));
     }
 
     template<typename P>
@@ -926,7 +926,7 @@ public:
         if (!inited()) {
             return None;
         } else {
-            if (invoke(static_forward<P>(predicate), val())) {
+            if (rxx::invoke(rxx:forward<P>(predicate), val())) {
                 return *this;
             } else {
                 return None;
@@ -939,7 +939,7 @@ public:
         if (!inited()) {
             return None;
         } else {
-            if (invoke(static_forward<P>(predicate), val())) {
+            if (rxx::invoke(rxx:forward<P>(predicate), val())) {
                 return *this;
             } else {
                 return None;
@@ -968,7 +968,7 @@ public:
         if (inited()) {
             return *this;
         } else {
-            return invoke(static_forward<F>(f));
+            return rxx::invoke(rxx:forward<F>(f));
         }
     }
 
@@ -977,7 +977,7 @@ public:
         if (inited()) {
             return *this;
         } else {
-            return invoke(static_forward<F>(f));
+            return rxx::invoke(rxx:forward<F>(f));
         }
     }
 
@@ -1012,7 +1012,7 @@ public:
     template<class F>
     auto get_or_insert_with(F&& f) -> T& {
         if (!inited()) {
-            m_ptr = static_addressof(invoke(static_forward<F>(f)));
+            m_ptr = rxx::addressof(rxx::invoke(rxx:forward<F>(f)));
         } else {
             return val();
         }
@@ -1031,7 +1031,7 @@ public:
     auto replace(T& value) -> Option<T&> {
         if (inited()) {
             T* old_ptr = m_ptr;
-            m_ptr = static_addressof(value);
+            m_ptr = rxx::addressof(value);
             return Option<T&>(*old_ptr);
         } else {
             init(value);
@@ -1137,8 +1137,8 @@ template <class T> constexpr bool operator>=(option::None, const Option<T>& x) n
 }
 
 template<typename T>
-inline auto Some(T&& value) -> Option<typename std::decay<T>::type> {
-    return Option<typename std::decay<T>::type>(static_forward<T>(value));
+inline auto Some(T&& value) -> Option<rxx::remove_reference_t<T>> {
+    return Option<rxx::remove_reference_t<T>>(rxx:forward<T>(value));
 }
 
 }

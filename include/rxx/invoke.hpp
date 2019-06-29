@@ -19,10 +19,10 @@ template<class T>
 struct invoke_impl {
     template<class F, class... Args>
     static constexpr auto call(F&& f, Args&&... args)
-        noexcept(noexcept(static_forward<F>(f)(static_forward<Args>(args)...)))
-        -> decltype(static_forward<F>(f)(static_forward<Args>(args)...))
+        noexcept(noexcept(rxx::forward<F>(f)(rxx::forward<Args>(args)...)))
+        -> decltype(rxx::forward<F>(f)(rxx::forward<Args>(args)...))
     {
-        return static_forward<F>(f)(static_forward<Args>(args)...);
+        return rxx::forward<F>(f)(rxx::forward<Args>(args)...);
     }
 };
  
@@ -31,7 +31,7 @@ struct invoke_impl<MT B::*> {
     template<class T, class Td = typename std::decay<T>::type,
              class = typename std::enable_if<std::is_base_of<B, Td>::value>::type>
     static constexpr auto get(T&& t) noexcept -> T&& {
-        return static_move(t);
+        return rxx::move(t);
     }
  
     template<class T, class Td = typename std::decay<T>::type,
@@ -43,31 +43,31 @@ struct invoke_impl<MT B::*> {
     template<class T, class Td = typename std::decay<T>::type,
              class = typename std::enable_if<!std::is_base_of<B, Td>::value>::type,
              class = typename std::enable_if<!is_reference_wrapper<Td>::value>::type>
-    static constexpr auto get(T&& t) noexcept -> decltype(*static_forward<T>(t)) {
-        return *static_forward<T>(t);
+    static constexpr auto get(T&& t) noexcept -> decltype(*rxx::forward<T>(t)) {
+        return *rxx::forward<T>(t);
     }
  
     template<class T, class... Args, class MT1,
              class = typename std::enable_if<std::is_function<MT1>::value>::type>
     static constexpr auto call(MT1 B::*pmf, T&& t, Args&&... args)
-        noexcept(noexcept((invoke_impl::get(static_forward<T>(t)).*pmf)(static_forward<Args>(args)...)))
-        -> decltype((invoke_impl::get(static_forward<T>(t)).*pmf)(static_forward<Args>(args)...)) {
-        return (invoke_impl::get(static_forward<T>(t)).*pmf)(static_forward<Args>(args)...);
+        noexcept(noexcept((invoke_impl::get(rxx::forward<T>(t)).*pmf)(rxx::forward<Args>(args)...)))
+        -> decltype((invoke_impl::get(rxx::forward<T>(t)).*pmf)(rxx::forward<Args>(args)...)) {
+        return (invoke_impl::get(rxx::forward<T>(t)).*pmf)(rxx::forward<Args>(args)...);
     }
  
     template<class T>
     static auto call(MT B::*pmd, T&& t)
-        noexcept(noexcept(invoke_impl::get(static_forward<T>(t)).*pmd))
-        -> decltype(invoke_impl::get(static_forward<T>(t)).*pmd) {
-        return invoke_impl::get(static_forward<T>(t)).*pmd;
+        noexcept(noexcept(invoke_impl::get(rxx::forward<T>(t)).*pmd))
+        -> decltype(invoke_impl::get(rxx::forward<T>(t)).*pmd) {
+        return invoke_impl::get(rxx::forward<T>(t)).*pmd;
     }
 };
  
 template<class F, class... Args, class Fd = typename std::decay<F>::type>
 constexpr auto INVOKE(F&& f, Args&&... args)
-    noexcept(noexcept(invoke_impl<Fd>::call(static_forward<F>(f), static_forward<Args>(args)...)))
-    -> decltype(invoke_impl<Fd>::call(static_forward<F>(f), static_forward<Args>(args)...)) {
-    return invoke_impl<Fd>::call(static_forward<F>(f), static_forward<Args>(args)...);
+    noexcept(noexcept(invoke_impl<Fd>::call(rxx::forward<F>(f), rxx::forward<Args>(args)...)))
+    -> decltype(invoke_impl<Fd>::call(rxx::forward<F>(f), rxx::forward<Args>(args)...)) {
+    return invoke_impl<Fd>::call(rxx::forward<F>(f), rxx::forward<Args>(args)...);
 }
 
 } // namespace impl
@@ -121,31 +121,31 @@ struct is_nothrow_invocable_r<void_t<invoke_result_<F, Args...>>, R, F, Args...>
 
 template <class> struct result_of;
 template <class F, class... Args>
-struct result_of<F(Args...)> : impl::invoke_result<void, F, Args...> {};
+struct result_of<F(Args...)> : rxx::impl::invoke_result<void, F, Args...> {};
  
 template<class F, class... Args>
-struct invoke_result : impl::invoke_result<void, F, Args...> {};
+struct invoke_result : rxx::impl::invoke_result<void, F, Args...> {};
 
 template<typename F, typename... Args>
 using invoke_result_t = typename invoke_result<F, Args...>::type;
 
 template<typename F, typename... Args>
-struct is_invocable : impl::is_invocable<void, F, Args...> {};
+struct is_invocable : rxx::impl::is_invocable<void, F, Args...> {};
 
 template<typename R, typename F, typename... Args>
-struct is_invocable_r : impl::is_invocable_r<void, R, F, Args...> {};
+struct is_invocable_r : rxx::impl::is_invocable_r<void, R, F, Args...> {};
 
 template<typename F, typename... Args>
-struct is_nothrow_invocable : impl::is_nothrow_invocable<void, F, Args...> {};
+struct is_nothrow_invocable : rxx::impl::is_nothrow_invocable<void, F, Args...> {};
 
 template<typename R, typename F, typename... Args>
-struct is_nothrow_invocable_r : impl::is_nothrow_invocable<void, R, F, Args...> {};
+struct is_nothrow_invocable_r : rxx::impl::is_nothrow_invocable<void, R, F, Args...> {};
 
 template<class F, class... Args>
 constexpr invoke_result_t<F, Args...> invoke(F&& f, Args&&... args) 
     noexcept(is_nothrow_invocable<F, Args...>::value)
 {
-    return impl::INVOKE(static_forward<F>(f), static_forward<Args>(args)...);
+    return rxx::impl::INVOKE(rxx::forward<F>(f), rxx::forward<Args>(args)...);
 }
 
 } // namespace rxx

@@ -12,7 +12,7 @@ template<typename T>
 struct Ok {
     T m_ok;
 
-    constexpr Ok(T&& t) : m_ok(static_move(t)) {}
+    constexpr Ok(T&& t) : m_ok(rxx::move(t)) {}
     constexpr Ok(T const& t) : m_ok(t) {}
     Ok(Ok&&) = default;
     Ok(Ok const&) = default;
@@ -27,7 +27,7 @@ template<typename E>
 struct Err {
     E m_err;
 
-    constexpr Err(E&& e) : m_err(static_move(e)) {}
+    constexpr Err(E&& e) : m_err(rxx::move(e)) {}
     constexpr Err(E const& e) : m_err(e) {}
     Err(Err&&) = default;
     Err(Err const&) = default;
@@ -63,12 +63,12 @@ template<typename T>                class Result<T&, void>;
 template<typename T, typename E>    class Result<T&, E&>;
 
 template<typename T>
-inline auto Ok(T&& value) -> result::Ok<typename std::decay<T>::type>;
+inline auto Ok(T&& value) -> result::Ok<rxx::remove_reference_t<T>>;
 
 inline auto Ok() -> result::Ok<void> { return result::Ok<void>(); }
 
 template<typename E>
-inline auto Err(E&& err) -> result::Err<typename std::decay<E>::type>;
+inline auto Err(E&& err) -> result::Err<rxx::remove_reference_t<E>>;
 
 inline auto Err() -> result::Err<void> { return result::Err<void>(); }
 

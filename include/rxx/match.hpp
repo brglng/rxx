@@ -11,7 +11,7 @@ template<> struct Overloaded<> { void operator()() const; };
 
 template<typename T> struct Overloaded<T> : T {
     constexpr Overloaded(T const& t) : T(t) {}
-    constexpr Overloaded(T&& t) : T(rxx::static_move(t)) {}
+    constexpr Overloaded(T&& t) : T(rxx::move(t)) {}
     using T::operator();
 };
 
@@ -19,8 +19,8 @@ template<typename T, typename... Ts>
 struct Overloaded<T, Ts...> : T, Overloaded<Ts...> {
     constexpr Overloaded(T const& t, Ts const&... ts) : T(t), Overloaded<Ts...>(ts...) {}
     constexpr Overloaded(T&& t, Ts&&... ts) :
-        T(rxx::static_move(t)),
-        Overloaded<Ts...>(rxx::static_move(ts)...)
+        T(rxx::move(t)),
+        Overloaded<Ts...>(rxx::move(ts)...)
     {}
 
     using T::operator();
@@ -29,7 +29,7 @@ struct Overloaded<T, Ts...> : T, Overloaded<Ts...> {
 
 template<typename... Ts>
 inline constexpr auto overloaded(Ts&&... ts) -> Overloaded<Ts...> {
-    return Overloaded<Ts...>(rxx::static_forward<Ts>(ts)...);
+    return Overloaded<Ts...>(rxx::forward<Ts>(ts)...);
 }
 
 #define RXX_MATCH(v, ...) rxx::visit(overloaded(__VA_ARGS__), v)
