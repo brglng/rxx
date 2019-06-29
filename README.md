@@ -23,14 +23,14 @@ build tree:
 
 ```cmake
 add_subdirectory(rxx)
-target_link_library(YourProject PUBLIC Rxx::Rxx)
+target_link_library(YourProject PUBLIC Rxx::rxx)
 ```
  
 or install `rxx` somewhere and use `find_package` to find it:
 
 ```cmake
 find_package(Rxx)
-target_link_library(YourProject PUBLIC Rxx::Rxx)
+target_link_library(YourProject PUBLIC Rxx::rxx)
 ```
 
 <!-- vim: set cc=80 tw=80 sw=4 sts=4 et: -->
