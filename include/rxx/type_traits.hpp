@@ -38,11 +38,11 @@ using remove_reference_t = typename std::remove_reference<T>::type;
 template<std::size_t Len, class... Types>
 struct aligned_union
 {
-    static constexpr std::size_t alignment_value = static_max(alignof(Types)...);
+    static constexpr std::size_t alignment_value = rxx::max(alignof(Types)...);
  
     struct type
     {
-        alignas(alignment_value) char _s[static_max(Len, sizeof(Types)...)];
+        alignas(alignment_value) char _s[rxx::max(Len, sizeof(Types)...)];
     };
 };
 
