@@ -17,7 +17,7 @@ namespace rxx {
 template<typename T, typename E>
 class Result {
 private:
-    aligned_union_t<1, T, E> m_buffer;
+    rxx::aligned_union_t<1, T, E> m_buffer;
     bool m_is_ok;
 
     T& value() & noexcept {
@@ -211,8 +211,8 @@ public:
 
     template<typename F>
     typename std::enable_if<
-        !std::is_void<invoke_result_t<decay_t<F>, T&>>::value,
-        Result<invoke_result_t<decay_t<F>, T&>, E>>::type
+        !std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T&>>::value,
+        Result<rxx::invoke_result_t<rxx::decay_t<F>, T&>, E>>::type
     map(F&& op) {
         if (is_ok()) {
             return Ok(rxx::invoke(rxx::forward<F>(op), value()));
@@ -223,7 +223,7 @@ public:
 
     template<typename F>
     typename std::enable_if<
-        std::is_void<invoke_result_t<decay_t<F>, T&>>::value,
+        std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T&>>::value,
         Result<void, E>>::type
     map(F&& op) {
         if (is_ok()) {
@@ -236,8 +236,8 @@ public:
 
     template<typename F>
     typename std::enable_if<
-        !std::is_void<invoke_result_t<decay_t<F>, T const&>>::value,
-        Result<invoke_result_t<decay_t<F>, T&>, E>>::type
+        !std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T const&>>::value,
+        Result<rxx::invoke_result_t<rxx::decay_t<F>, T&>, E>>::type
     map(F&& op) const {
         if (is_ok()) {
             return Ok(rxx::invoke(rxx::forward<F>(op), value()));
@@ -248,7 +248,7 @@ public:
 
     template<typename F>
     typename std::enable_if<
-        std::is_void<invoke_result_t<decay_t<F>, T const&>>::value,
+        std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T const&>>::value,
         Result<void, E>>::type
     map(F&& op) const {
         if (is_ok()) {
@@ -292,8 +292,8 @@ public:
 
     template<typename O>
     typename std::enable_if<
-        !std::is_void<invoke_result_t<decay_t<O>, E&>>::value,
-        Result<T, invoke_result_t<decay_t<O>, E&>>>::type
+        !std::is_void<rxx::invoke_result_t<rxx::decay_t<O>, E&>>::value,
+        Result<T, rxx::invoke_result_t<rxx::decay_t<O>, E&>>>::type
     map_err(O&& op) {
         if (!is_ok()) {
             return Err(rxx::invoke(rxx::forward<O>(op), error()));
@@ -304,7 +304,7 @@ public:
 
     template<typename O>
     typename std::enable_if<
-        std::is_void<invoke_result_t<decay_t<O>, E&>>::value,
+        std::is_void<rxx::invoke_result_t<rxx::decay_t<O>, E&>>::value,
         Result<T, void>>::type
     map_err(O&& op) {
         if (!is_ok()) {
@@ -317,8 +317,8 @@ public:
 
     template<typename O>
     typename std::enable_if<
-        !std::is_void<invoke_result_t<decay_t<O>, E const&>>::value,
-        Result<T, invoke_result_t<decay_t<O>, E const&>>>::type
+        !std::is_void<rxx::invoke_result_t<rxx::decay_t<O>, E const&>>::value,
+        Result<T, rxx::invoke_result_t<rxx::decay_t<O>, E const&>>>::type
     map_err(O&& op) const {
         if (!is_ok()) {
             return Err(rxx::invoke(rxx::forward<O>(op), error()));
@@ -329,7 +329,7 @@ public:
 
     template<typename O>
     typename std::enable_if<
-        std::is_void<invoke_result_t<decay_t<O>, E const&>>::value,
+        std::is_void<rxx::invoke_result_t<rxx::decay_t<O>, E const&>>::value,
         Result<T, void>>::type
     map_err(O&& op) const {
         if (!is_ok()) {
@@ -360,7 +360,7 @@ public:
 
     template<typename F>
     typename std::enable_if<
-        is_result_of_same_err_type<
+        rxx::is_result_of_same_err_type<
             Result<T, E>,
             typename invoke_result<typename std::decay<F>::type, T&>::type>::value,
         typename invoke_result<typename std::decay<F>::type, T&>::type
@@ -375,7 +375,7 @@ public:
 
     template<typename F>
     typename std::enable_if<
-        is_result_of_same_err_type<
+        rxx::is_result_of_same_err_type<
             Result<T, E>,
             typename invoke_result<typename std::decay<F>::type, T const&>::type>::value,
         typename invoke_result<typename std::decay<F>::type, T const&>::type
@@ -408,7 +408,7 @@ public:
 
     template<typename O>
     typename std::enable_if<
-        is_result_of_same_value_type<
+        rxx::is_result_of_same_value_type<
             Result<T, E>,
             typename invoke_result<typename std::decay<O>::type, E&>::type>::value,
         typename invoke_result<typename std::decay<O>::type, E&>::type
@@ -423,7 +423,7 @@ public:
 
     template<typename O>
     typename std::enable_if<
-        is_result_of_same_value_type<
+        rxx::is_result_of_same_value_type<
             Result<T, E>,
             typename invoke_result<typename std::decay<O>::type, E const&>::type>::value,
         typename invoke_result<typename std::decay<O>::type, E const&>::type
@@ -742,8 +742,8 @@ public:
 
     template<typename O>
     typename std::enable_if<
-        !std::is_void<invoke_result_t<decay_t<O>, E&>>::value,
-        Result<void, invoke_result_t<decay_t<O>, E&>>>::type
+        !std::is_void<rxx::invoke_result_t<rxx::decay_t<O>, E&>>::value,
+        Result<void, rxx::invoke_result_t<rxx::decay_t<O>, E&>>>::type
     map_err(O&& op) {
         if (!is_ok()) {
             return Err(rxx::invoke(rxx::forward<O>(op), error()));
@@ -754,8 +754,8 @@ public:
 
     template<typename O>
     typename std::enable_if<
-        std::is_void<invoke_result_t<decay_t<O>, E&>>::value,
-        Result<void, invoke_result_t<decay_t<O>, E&>>>::type
+        std::is_void<rxx::invoke_result_t<rxx::decay_t<O>, E&>>::value,
+        Result<void, rxx::invoke_result_t<rxx::decay_t<O>, E&>>>::type
     map_err(O&& op) {
         if (!is_ok()) {
             rxx::invoke(rxx::forward<O>(op), error());
@@ -767,8 +767,8 @@ public:
 
     template<typename O>
     typename std::enable_if<
-        !std::is_void<invoke_result_t<decay_t<O>, E const&>>::value,
-        Result<void, invoke_result_t<decay_t<O>, E const&>>>::type
+        !std::is_void<rxx::invoke_result_t<rxx::decay_t<O>, E const&>>::value,
+        Result<void, rxx::invoke_result_t<rxx::decay_t<O>, E const&>>>::type
     map_err(O&& op) const {
         if (!is_ok()) {
             return Err(rxx::invoke(rxx::forward<O>(op), error()));
@@ -779,8 +779,8 @@ public:
 
     template<typename O>
     typename std::enable_if<
-        std::is_void<invoke_result_t<decay_t<O>, E const&>>::value,
-        Result<void, invoke_result_t<decay_t<O>, E const&>>>::type
+        std::is_void<rxx::invoke_result_t<rxx::decay_t<O>, E const&>>::value,
+        Result<void, rxx::invoke_result_t<rxx::decay_t<O>, E const&>>>::type
     map_err(O&& op) const {
         if (!is_ok()) {
             rxx::invoke(rxx::forward<O>(op), error());
@@ -810,7 +810,7 @@ public:
 
     template<typename F>
     typename std::enable_if<
-        is_result_of_same_err_type<
+        rxx::is_result_of_same_err_type<
             Result<void, E>,
             typename invoke_result<typename std::decay<F>::type>::type>::value,
         typename invoke_result<typename std::decay<F>::type>::type
@@ -825,7 +825,7 @@ public:
 
     template<typename F>
     typename std::enable_if<
-        is_result_of_same_err_type<
+        rxx::is_result_of_same_err_type<
             Result<void, E>,
             typename invoke_result<typename std::decay<F>::type>::type>::value,
         typename invoke_result<typename std::decay<F>::type>::type
@@ -858,7 +858,7 @@ public:
 
     template<typename O>
     typename std::enable_if<
-        is_result_of_same_value_type<
+        rxx::is_result_of_same_value_type<
             Result<void, E>,
             typename invoke_result<typename std::decay<O>::type, E&>::type>::value,
         typename invoke_result<typename std::decay<O>::type, E&>::type
@@ -873,7 +873,7 @@ public:
 
     template<typename O>
     typename std::enable_if<
-        is_result_of_same_value_type<
+        rxx::is_result_of_same_value_type<
             Result<void, E>,
             typename invoke_result<typename std::decay<O>::type, E const&>::type>::value,
         typename invoke_result<typename std::decay<O>::type, E const&>::type
@@ -1061,16 +1061,16 @@ public:
 
     template<typename F>
     typename std::enable_if<
-        !std::is_void<invoke_result_t<decay_t<F>, T&>>::value,
-        Result<invoke_result_t<decay_t<F>, T&>, void>>::type
+        !std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T&>>::value,
+        Result<rxx::invoke_result_t<rxx::decay_t<F>, T&>, void>>::type
     map(F&& op) {
         return Ok(rxx::invoke(rxx::forward<F>(op), value()));
     }
 
     template<typename F>
     typename std::enable_if<
-        std::is_void<invoke_result_t<decay_t<F>, T&>>::value,
-        Result<invoke_result_t<decay_t<F>, T&>, void>>::type
+        std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T&>>::value,
+        Result<rxx::invoke_result_t<rxx::decay_t<F>, T&>, void>>::type
     map(F&& op) {
         rxx::invoke(rxx::forward<F>(op), value());
         return Ok();
@@ -1078,16 +1078,16 @@ public:
 
     template<typename F>
     typename std::enable_if<
-        !std::is_void<invoke_result_t<decay_t<F>, T const&>>::value,
-        Result<invoke_result_t<decay_t<F>, T&>, void>>::type
+        !std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T const&>>::value,
+        Result<rxx::invoke_result_t<rxx::decay_t<F>, T&>, void>>::type
     map(F&& op) const {
         return Ok(rxx::invoke(rxx::forward<F>(op), value()));
     }
 
     template<typename F>
     typename std::enable_if<
-        std::is_void<invoke_result_t<decay_t<F>, T const&>>::value,
-        Result<invoke_result_t<decay_t<F>, T&>, void>>::type
+        std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T const&>>::value,
+        Result<rxx::invoke_result_t<rxx::decay_t<F>, T&>, void>>::type
     map(F&& op) const {
         rxx::invoke(rxx::forward<F>(op), value());
         return Ok();
@@ -1105,7 +1105,7 @@ public:
 
     template<typename F>
     typename std::enable_if<
-        is_result_of_same_err_type<
+        rxx::is_result_of_same_err_type<
             Result<T, void>,
             typename invoke_result<typename std::decay<F>::type, T&>::type>::value,
         typename invoke_result<typename std::decay<F>::type, T&>::type
@@ -1116,7 +1116,7 @@ public:
 
     template<typename F>
     typename std::enable_if<
-        is_result_of_same_err_type<
+        rxx::is_result_of_same_err_type<
             Result<T, void>,
             typename invoke_result<typename std::decay<F>::type, T const&>::type>::value,
         typename invoke_result<typename std::decay<F>::type, T const&>::type
@@ -1209,16 +1209,16 @@ public:
 
     template<typename F>
     typename std::enable_if<
-        !std::is_void<invoke_result_t<decay_t<F>>>::value,
-        Result<invoke_result_t<decay_t<F>>, void>>::type
+        !std::is_void<rxx::invoke_result_t<rxx::decay_t<F>>>::value,
+        Result<rxx::invoke_result_t<rxx::decay_t<F>>, void>>::type
     map(F&& op) const {
         return Ok(rxx::invoke(rxx::forward<F>(op)));
     }
 
     template<typename F>
     typename std::enable_if<
-        std::is_void<invoke_result_t<decay_t<F>>>::value,
-        Result<invoke_result_t<decay_t<F>>, void>>::type
+        std::is_void<rxx::invoke_result_t<rxx::decay_t<F>>>::value,
+        Result<rxx::invoke_result_t<rxx::decay_t<F>>, void>>::type
     map(F&& op) const {
         rxx::invoke(rxx::forward<F>(op));
         return Ok();
@@ -1236,7 +1236,7 @@ public:
 
     template<typename F>
     typename std::enable_if<
-        is_result_of_same_err_type<
+        rxx::is_result_of_same_err_type<
             Result<void, void>,
             typename invoke_result<typename std::decay<F>::type>::type>::value,
         typename invoke_result<typename std::decay<F>::type>::type
@@ -1247,7 +1247,7 @@ public:
 
     template<typename F>
     typename std::enable_if<
-        is_result_of_same_err_type<
+        rxx::is_result_of_same_err_type<
             Result<void, void>,
             typename invoke_result<typename std::decay<F>::type>::type>::value,
         typename invoke_result<typename std::decay<F>::type>::type
@@ -1288,6 +1288,48 @@ inline auto Err(E&& err) -> result::Err<rxx::remove_reference_t<E>> {
     return result::Err<rxx::remove_reference_t<E>>{rxx::forward<E>(err)};
 }
 
+template<class R, class V, class T, class E>
+inline R visit(V&& v, Result<T, E>& res) {
+    return res.is_ok() ?
+        rxx::invoke(v, res.unwrap()) :
+        rxx::invoke(v, res.unwrap_err());
+}
+
+template<class R, class V, class T, class E>
+inline R visit(V&& v, Result<T, E> const& res) {
+    return res.is_ok() ?
+        rxx::invoke(v, res.unwrap()) :
+        rxx::invoke(v, res.unwrap_err());
+}
+
+template<class R, class V, class T, class E>
+inline R visit(V&& v, Result<T, E>&& res) {
+    return res.is_ok() ?
+        rxx::invoke(v, res.unwrap()) :
+        rxx::invoke(v, res.unwrap_err());
+}
+
+template<class V, class T, class E>
+inline void visit(V&& v, Result<T, E>& res) {
+    return res.is_ok() ?
+        rxx::invoke(v, res.unwrap()) :
+        rxx::invoke(v, res.unwrap_err());
+}
+
+template<class V, class T, class E>
+inline void visit(V&& v, Result<T, E> const& res) {
+    return res.is_ok() ?
+        rxx::invoke(v, res.unwrap()) :
+        rxx::invoke(v, res.unwrap_err());
+}
+
+template<class V, class T, class E>
+inline void visit(V&& v, Result<T, E>&& res) {
+    return res.is_ok() ?
+        rxx::invoke(v, res.unwrap()) :
+        rxx::invoke(v, res.unwrap_err());
+}
+
 #define RXX_TRY(...) ({                     \
     auto __res = __VA_ARGS__;               \
     if (__res.is_err())                     \
@@ -1295,6 +1337,6 @@ inline auto Err(E&& err) -> result::Err<rxx::remove_reference_t<E>> {
     __res.unwrap();                         \
 })
 
-}
+} // namespace rxx
 
 #endif /* end of include guard: __RXX_RESULT_DEF_HPP__ */

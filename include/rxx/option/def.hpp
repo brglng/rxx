@@ -55,14 +55,14 @@ struct OptionBase
 
     explicit constexpr OptionBase(const T& v) : m_inited(true), m_storage(v) {}
 
-    explicit constexpr OptionBase(T&& v) : m_inited(true), m_storage(static_move(v)) {}
+    explicit constexpr OptionBase(T&& v) : m_inited(true), m_storage(rxx::move(v)) {}
 
     template<class... Args>
-    explicit OptionBase(in_place_t, Args&&... args)
+    explicit OptionBase(rxx::in_place_t, Args&&... args)
         : m_inited(true), m_storage(rxx::forward<Args>(args)...) {}
 
     template <class U, class... Args, RXX_REQUIRES(std::is_constructible<T, std::initializer_list<U>>)>
-    explicit OptionBase(in_place_t, std::initializer_list<U> il, Args&&... args)
+    explicit OptionBase(rxx::in_place_t, std::initializer_list<U> il, Args&&... args)
         : m_inited(true), m_storage(il, rxx::forward<Args>(args)...) {}
 
     ~OptionBase() { if (m_inited) m_storage.m_value.T::~T(); }
@@ -79,14 +79,14 @@ struct ConstExprOptionBase
 
     explicit constexpr ConstExprOptionBase(const T& v) : m_inited(true), m_storage(v) {}
 
-    explicit constexpr ConstExprOptionBase(T&& v) : m_inited(true), m_storage(static_move(v)) {}
+    explicit constexpr ConstExprOptionBase(T&& v) : m_inited(true), m_storage(rxx::move(v)) {}
 
     template<class... Args>
-    explicit constexpr ConstExprOptionBase(in_place_t, Args&&... args)
+    explicit constexpr ConstExprOptionBase(rxx::in_place_t, Args&&... args)
         : m_inited(true), m_storage(rxx::forward<Args>(args)...) {}
 
     template<class U, class... Args, RXX_REQUIRES(std::is_constructible<T, std::initializer_list<U>>)>
-    explicit constexpr ConstExprOptionBase(in_place_t, std::initializer_list<U> il, Args&&... args)
+    explicit constexpr ConstExprOptionBase(rxx::in_place_t, std::initializer_list<U> il, Args&&... args)
         : m_inited(true), m_storage(il, rxx::forward<Args>(args)...) {}
 
     ~ConstExprOptionBase() = default;
@@ -105,7 +105,7 @@ using Base = typename std::conditional<
 template<typename T>
 class Option : private option::impl::Base<T> {
     static_assert(!std::is_same<typename std::decay<T>::type, option::None>::value, "bad T");
-    static_assert(!std::is_same<typename std::decay<T>::type, in_place_t>::value, "bad T");
+    static_assert(!std::is_same<typename std::decay<T>::type, rxx::in_place_t>::value, "bad T");
 
     constexpr bool inited() const noexcept {
         return option::impl::Base<T>::m_inited;
@@ -128,7 +128,7 @@ class Option : private option::impl::Base<T> {
     }
 
     T&& val() && {
-        return static_move(option::impl::Base<T>::m_storage.m_value);
+        return rxx::move(option::impl::Base<T>::m_storage.m_value);
     }
 
     T& val() & {
@@ -171,7 +171,7 @@ public:
     Option(Option&& that) noexcept(std::is_nothrow_move_constructible<T>::value)
         : option::impl::Base<T>() {
         if (that.inited()) {
-            ::new (static_cast<void*>(valptr())) T(static_move(that.val()));
+            ::new (static_cast<void*>(valptr())) T(rxx::move(that.val()));
             set_inited(true);
         }
     }
@@ -180,15 +180,15 @@ public:
         : option::impl::Base<T>(value) {}
 
     explicit constexpr Option(T&& value) noexcept(std::is_nothrow_move_constructible<T>::value)
-        : option::impl::Base<T>(static_move(value)) {}
+        : option::impl::Base<T>(rxx::move(value)) {}
 
     template<class... Args>
-    explicit constexpr Option(in_place_t, Args&&... args)
-        : option::impl::Base<T>(in_place_t(), rxx::forward<Args>(args)...) {}
+    explicit constexpr Option(rxx::in_place_t, Args&&... args)
+        : option::impl::Base<T>(rxx::in_place_t(), rxx::forward<Args>(args)...) {}
 
     template<class U, class... Args, RXX_REQUIRES(std::is_constructible<T, std::initializer_list<U>>)>
-    explicit constexpr Option(in_place_t, std::initializer_list<U> il, Args&&... args)
-        : option::impl::Base<T>(in_place_t(), il, rxx::forward<Args>(args)...) {}
+    explicit constexpr Option(rxx::in_place_t, std::initializer_list<U> il, Args&&... args)
+        : option::impl::Base<T>(rxx::in_place_t(), il, rxx::forward<Args>(args)...) {}
 
     ~Option() = default;
 
@@ -206,8 +206,8 @@ public:
 
     auto operator=(Option&& that) noexcept(std::is_nothrow_move_assignable<T>::value && std::is_nothrow_move_constructible<T>::value) -> Option& {
         if      (inited() && !that.inited())    clear();
-        else if (!inited() && that.inited())    init(static_move(that.val()));
-        else if (inited() && that.inited())     val() = static_move(that.val());
+        else if (!inited() && that.inited())    init(rxx::move(that.val()));
+        else if (inited() && that.inited())     val() = rxx::move(that.val());
         return *this;
     }
 
@@ -234,7 +234,7 @@ public:
             std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
-        return static_move(val());
+        return rxx::move(val());
     }
 
     auto expect(Str msg) const noexcept -> T {
@@ -247,7 +247,7 @@ public:
 
     auto unwrap() -> T {
         assert(inited());
-        return static_move(val());
+        return rxx::move(val());
     }
 
     auto unwrap() const -> T {
@@ -257,15 +257,15 @@ public:
 
     auto unwrap_or(T&& def) noexcept -> T {
         if (inited()) {
-            return static_move(val());
+            return rxx::move(val());
         } else {
-            return static_move(def);
+            return rxx::move(def);
         }
     }
 
     auto unwrap_or(T const& def) noexcept -> T {
         if (inited()) {
-            return static_move(val());
+            return rxx::move(val());
         } else {
             return def;
         }
@@ -275,7 +275,7 @@ public:
         if (inited()) {
             return val();
         } else {
-            return static_move(def);
+            return rxx::move(def);
         }
     }
 
@@ -290,7 +290,7 @@ public:
     template<typename F>
     auto unwrap_or_else(F&& f) -> T {
         if (inited()) {
-            return static_move(val());
+            return rxx::move(val());
         } else {
             return rxx::invoke(rxx::forward<F>(f));
         }
@@ -306,8 +306,8 @@ public:
     }
 
     template<typename F>
-    enable_if_t<!std::is_void<invoke_result_t<decay_t<F>, T&>>::value,
-                Option<invoke_result_t<decay_t<F>, T&>>>
+    rxx::enable_if_t<!std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T&>>::value,
+                     Option<rxx::invoke_result_t<rxx::decay_t<F>, T&>>>
     map(F&& f) {
         if (inited()) {
             return Some(rxx::invoke(rxx::forward<F>(f), val()));
@@ -317,7 +317,7 @@ public:
     }
 
     template<typename F>
-    enable_if_t<std::is_void<invoke_result_t<decay_t<F>, T&>>::value, Option<void>>
+    rxx::enable_if_t<std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T&>>::value, Option<void>>
     map(F&& f) {
         if (inited()) {
             rxx::invoke(rxx::forward<F>(f), val());
@@ -328,8 +328,8 @@ public:
     }
 
     template<typename F>
-    enable_if_t<!std::is_void<invoke_result_t<decay_t<F>, T const&>>::value,
-                Option<invoke_result_t<decay_t<F>, T const&>>>
+    rxx::enable_if_t<!std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T const&>>::value,
+                     Option<rxx::invoke_result_t<rxx::decay_t<F>, T const&>>>
     map(F&& f) const {
         if (inited()) {
             return Some(rxx::invoke(rxx::forward<F>(f), val()));
@@ -339,7 +339,7 @@ public:
     }
 
     template<typename F>
-    enable_if_t<std::is_void<invoke_result_t<decay_t<F>, T const&>>::value, Option<void>>
+    rxx::enable_if_t<std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T const&>>::value, Option<void>>
     map(F&& f) const {
         if (inited()) {
             rxx::invoke(rxx::forward<F>(f), val());
@@ -406,21 +406,21 @@ public:
     auto ok_or(E&& err) const noexcept -> Result<T, E>;
 
     template<typename F>
-    enable_if_t<!std::is_void<invoke_result_t<decay_t<F>>>::value,
-                Result<T, invoke_result_t<decay_t<F>>>>
+    rxx::enable_if_t<!std::is_void<rxx::invoke_result_t<rxx::decay_t<F>>>::value,
+                     Result<T, rxx::invoke_result_t<rxx::decay_t<F>>>>
     ok_or_else(F&& err);
 
     template<typename F>
-    enable_if_t<std::is_void<invoke_result_t<decay_t<F>>>::value, Result<T, void>>
+    rxx::enable_if_t<std::is_void<rxx::invoke_result_t<rxx::decay_t<F>>>::value, Result<T, void>>
     ok_or_else(F&& err);
 
     template<typename F>
-    enable_if_t<!std::is_void<invoke_result_t<decay_t<F>>>::value,
-                Result<T, invoke_result_t<decay_t<F>>>>
+    rxx::enable_if_t<!std::is_void<rxx::invoke_result_t<rxx::decay_t<F>>>::value,
+                     Result<T, rxx::invoke_result_t<rxx::decay_t<F>>>>
     ok_or_else(F&& err) const;
 
     template<typename F>
-    enable_if_t<std::is_void<invoke_result_t<decay_t<F>>>::value, Result<T, void>>
+    rxx::enable_if_t<std::is_void<rxx::invoke_result_t<rxx::decay_t<F>>>::value, Result<T, void>>
     ok_or_else(F&& err) const;
 
     template<typename U>
@@ -441,7 +441,7 @@ public:
             return None;
         } else {
             if (rxx::invoke(rxx::forward<P>(predicate), val())) {
-                return static_move(*this);
+                return rxx::move(*this);
             } else {
                 return None;
             }
@@ -463,7 +463,7 @@ public:
 
     auto or_(Option<T> optb) -> Option<T> {
         if (inited()) {
-            return static_move(*this);
+            return rxx::move(*this);
         } else {
             return optb;
         }
@@ -480,7 +480,7 @@ public:
     template<typename F>
     auto or_else(F&& f) -> Option<T> {
         if (inited()) {
-            return static_move(*this);
+            return rxx::move(*this);
         } else {
             return rxx::invoke(rxx::forward<F>(f));
         }
@@ -497,7 +497,7 @@ public:
 
     auto xor_(Option<T> optb) -> Option<T> {
         if (inited() && !optb.inited()) {
-            return static_move(*this);
+            return rxx::move(*this);
         } else if (!inited() && optb.inited()) {
             return optb;
         } else {
@@ -525,7 +525,7 @@ public:
 
     auto get_or_insert(T&& v) -> T& {
         if (!inited()) {
-            init(static_move(v));
+            init(rxx::move(v));
         } else {
             return val();
         }
@@ -543,7 +543,7 @@ public:
     auto take() -> Option<T> {
         if (inited()) {
             set_inited(false);
-            return Some(static_move(val()));
+            return Some(rxx::move(val()));
         } else {
             return None;
         }
@@ -551,9 +551,9 @@ public:
 
     auto replace(T const& value) -> Option<T> {
         if (inited()) {
-            auto old_value = static_move(val());
+            auto old_value = rxx::move(val());
             val() = value;
-            return Some(static_move(old_value));
+            return Some(rxx::move(old_value));
         } else {
             init(value);
             return None;
@@ -562,18 +562,18 @@ public:
 
     auto replace(T&& value) -> Option<T> {
         if (inited()) {
-            auto old_value = static_move(val());
-            val() = static_move(value);
-            return Some(static_move(old_value));
+            auto old_value = rxx::move(val());
+            val() = rxx::move(value);
+            return Some(rxx::move(old_value));
         } else {
-            init(static_move(value));
+            init(rxx::move(value));
             return None;
         }
     }
 
     auto unwrap_or_default() -> T {
         if (inited()) {
-            return static_move(val());
+            return rxx::move(val());
         } else {
             return T {};
         }
@@ -598,7 +598,7 @@ public:
 
     Option(Option&&) noexcept {}
 
-    explicit constexpr Option(in_place_t) noexcept {}
+    explicit constexpr Option(rxx::in_place_t) noexcept {}
 
     ~Option() = default;
 
@@ -673,7 +673,7 @@ public:
 template<typename T>
 class Option<T&> {
     static_assert(!std::is_same<T, option::None>::value, "bad T" );
-    static_assert(!std::is_same<T, in_place_t>::value, "bad T" );
+    static_assert(!std::is_same<T, rxx::in_place_t>::value, "bad T" );
 
     T* m_ptr;
 
@@ -726,7 +726,7 @@ public:
             std::fprintf(stderr, "%s\n", msg.c_str());
             std::abort();
         }
-        return static_move(val());
+        return rxx::move(val());
     }
 
     auto expect(Str msg) const noexcept -> T const& {
@@ -798,8 +798,8 @@ public:
     }
 
     template<typename F>
-    enable_if_t<!std::is_void<invoke_result_t<decay_t<F>, T&>>::value,
-                Option<invoke_result_t<decay_t<F>, T&>>>
+    rxx::enable_if_t<!std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T&>>::value,
+                     Option<rxx::invoke_result_t<rxx::decay_t<F>, T&>>>
     map(F&& f) {
         if (inited()) {
             return Some(rxx::invoke(rxx::forward<F>(f), val()));
@@ -809,7 +809,7 @@ public:
     }
 
     template<typename F>
-    enable_if_t<std::is_void<invoke_result_t<decay_t<F>, T&>>::value, Option<void>>
+    rxx::enable_if_t<std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T&>>::value, Option<void>>
     map(F&& f) {
         if (inited()) {
             rxx::invoke(rxx::forward<F>(f), val());
@@ -820,8 +820,8 @@ public:
     }
 
     template<typename F>
-    enable_if_t<!std::is_void<invoke_result_t<decay_t<F>, T const&>>::value,
-                Option<invoke_result_t<decay_t<F>, T&>>>
+    rxx::enable_if_t<!std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T const&>>::value,
+                     Option<rxx::invoke_result_t<rxx::decay_t<F>, T&>>>
     map(F&& f) const {
         if (inited()) {
             return Some(rxx::invoke(rxx::forward<F>(f), val()));
@@ -831,7 +831,7 @@ public:
     }
 
     template<typename F>
-    enable_if_t<std::is_void<invoke_result_t<decay_t<F>, T const&>>::value, Option<void>>
+    rxx::enable_if_t<std::is_void<rxx::invoke_result_t<rxx::decay_t<F>, T const&>>::value, Option<void>>
     map(F&& f) const {
         if (inited()) {
             rxx::invoke(rxx::forward<F>(f), val());
@@ -844,7 +844,7 @@ public:
     template<typename U, typename F>
     auto map_or(U&& def, F&& f) -> U {
         if (inited()) {
-            return rxx::invoke(rxx::forward<F>(f), static_move(val()));
+            return rxx::invoke(rxx::forward<F>(f), rxx::move(val()));
         } else {
             return rxx::forward<U>(def);
         }
@@ -894,7 +894,7 @@ public:
     // template<typename E>
     // auto ok_or(E&& err) noexcept -> Result<T&, E> {
     //     if (inited()) {
-    //         return Ok(static_move(val()));
+    //         return Ok(rxx::move(val()));
     //     } else {
     //         return Err(std::rxx::forward<E>(err));
     //     }
@@ -903,7 +903,7 @@ public:
     // template<typename F>
     // auto ok_or_else(F&& err) -> Result<T&, typename invoke_result<typename std::decay<F>::type>::type> {
     //     if (inited()) {
-    //         return Ok(static_move(val()));
+    //         return Ok(rxx::move(val()));
     //     } else {
     //         return Err(rxx::invoke(std::rxx::forward<F>(err)));
     //     }
@@ -1141,6 +1141,48 @@ inline auto Some(T&& value) -> Option<rxx::remove_reference_t<T>> {
     return Option<rxx::remove_reference_t<T>>(rxx::forward<T>(value));
 }
 
+template<class R, class V, class T>
+inline constexpr R visit(V&& visitor, Option<T>& opt) {
+    return opt.is_some() ?
+        rxx::invoke(visitor, opt.unwrap()) :
+        rxx::invoke(visitor);
 }
+
+template<class R, class V, class T>
+inline constexpr R visit(V&& visitor, Option<T> const& opt) {
+    return opt.is_some() ?
+        rxx::invoke(visitor, opt.unwrap()) :
+        rxx::invoke(visitor);
+}
+
+template<class R, class V, class T>
+inline constexpr R visit(V&& visitor, Option<T>&& opt) {
+    return opt.is_some() ?
+        rxx::invoke(visitor, opt.unwrap()) :
+        rxx::invoke(visitor);
+}
+
+template<class V, class T>
+inline constexpr void visit(V&& visitor, Option<T>& opt) {
+    opt.is_some() ?
+        rxx::invoke(visitor, opt.unwrap()) :
+        rxx::invoke(visitor);
+}
+
+template<class V, class T>
+inline constexpr void visit(V&& visitor, Option<T> const& opt) {
+    opt.is_some() ?
+        rxx::invoke(visitor, opt.unwrap()) :
+        rxx::invoke(visitor);
+}
+
+template<class V, class T>
+inline constexpr void visit(V&& visitor, Option<T>&& opt) {
+    opt.is_some() ?
+        rxx::invoke(visitor, opt.unwrap()) :
+        rxx::invoke(visitor);
+}
+
+} // namespace rxx
 
 #endif /* end of include guard: __RXX_OPTION_DEF_HPP__ */

@@ -328,6 +328,6 @@ inline auto make(T&& value) -> Var<rxx::remove_reference_t<Args>...> {
 
 } // namespace var
 
-}
+} // namespace rxx
 
 #endif /* end of include guard: __RXX_VAR_HPP__ */
