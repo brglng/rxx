@@ -6,7 +6,7 @@
 #include <utility>
 #include <algorithm>
 #include <cassert>
-#include "rxx/rxx::invoke.hpp"
+#include "rxx/invoke.hpp"
 #include "rxx/option/proto.hpp"
 #include "rxx/result/proto.hpp"
 #include "rxx/str.hpp"
@@ -1284,8 +1284,8 @@ inline auto Ok(T&& value) -> result::Ok<rxx::remove_reference_t<T>> {
 }
 
 template<typename E>
-inline auto Err(E&& err) -> result::Err<rxx::remove_reference_t<T>> {
-    return result::Err<rxx::remove_reference_t<T>>{rxx::forward<E>(err)};
+inline auto Err(E&& err) -> result::Err<rxx::remove_reference_t<E>> {
+    return result::Err<rxx::remove_reference_t<E>>{rxx::forward<E>(err)};
 }
 
 #define RXX_TRY(...) ({                     \
