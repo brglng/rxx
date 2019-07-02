@@ -291,44 +291,30 @@ template<typename... Ts> constexpr rxx::var::impl::MoveAssignFunc*      rxx::Var
 template<typename... Ts> constexpr rxx::var::impl::CopyConstructFunc*   rxx::Var<Ts...>::m_copy_construct_funcs[];
 template<typename... Ts> constexpr rxx::var::impl::CopyAssignFunc*      rxx::Var<Ts...>::m_copy_assign_funcs[];
 
-template<class R, class V, class... Ts>
-inline constexpr R visit(V&& v, Var<Ts...>& var) {
-    return rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[var.index() + 1](rxx::forward<V>(v), var.storage());
-}
+template<typename T> struct is_var : std::false_type {};
+template<typename... Ts> struct is_var<Var<Ts...>> : std::true_type {};
 
-template<class R, class V, class... Ts>
+template<class R = void, class V, class... Ts>
 inline constexpr R visit(V&& v, Var<Ts...> const& var) {
-    return rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[var.index() + 1](rxx::forward<V>(v), var.storage());
+    return rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[var.index() + 1](
+        rxx::forward<V>(v),
+        const_cast<void*>(var.storage())
+    );
 }
 
-template<class R, class V, class... Ts>
+template<class R = void, class V, class... Ts>
 inline constexpr R visit(V&& v, Var<Ts...>&& var) {
-    return rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[var.index() + 1](rxx::forward<V>(v), var.storage());
+    return rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[rxx::forward<Var<Ts...>>(var).index() + 1](
+        rxx::forward<V>(v),
+        rxx::forward<Var<Ts...>>(var).storage()
+    );
 }
 
-template<class V, class... Ts>
-inline void visit(V&& v, Var<Ts...>& var) {
-    rxx::var::impl::VisitDispatcher<void, V, Ts...>::funcs[var.index() + 1](rxx::forward<V>(v), var.storage());
-}
-
-template<class V, class... Ts>
-inline void visit(V&& v, Var<Ts...> const& var) {
-    rxx::var::impl::VisitDispatcher<void, V, Ts...>::funcs[var.index() + 1](rxx::forward<V>(v), var.storage());
-}
-
-template<class V, class... Ts>
-inline void visit(V&& v, Var<Ts...>&& var) {
-    rxx::var::impl::VisitDispatcher<void, V, Ts...>::funcs[var.index() + 1](rxx::forward<V>(v), var.storage());
-}
-
-template<class R, class V, class T>
-inline constexpr R visit(V&& v, T&& t) {
-    return rxx::visit(rxx::forward<V>(v), rxx::forward<T>(t).as_var());
-}
-
-template<class V, class T>
-inline constexpr void visit(V&& v, T&& t) {
-    rxx::visit(rxx::forward<V>(v), rxx::forward<T>(t).as_var());
+template<class R = void, class V, class T>
+inline constexpr
+rxx::enable_if_t<!rxx::is_var<rxx::decay_t<T>>::value,
+R> visit(V&& v, T&& t) {
+    return rxx::visit<R>(rxx::forward<V>(v), rxx::forward<T>(t).as_var());
 }
 
 namespace var {
