@@ -9,7 +9,7 @@ TEST_CASE("visit and match works", "[io::SeekFrom]") {
     std::int64_t i64offset = 0;
 
     auto sf = SeekFrom(SeekFrom::Start(123));
-    RXX_MATCH(sf,
+    rxx::match(sf,
         [&](SeekFrom::Start const& s) {
             type = 1;
             u64offset = s.offset();
@@ -27,7 +27,7 @@ TEST_CASE("visit and match works", "[io::SeekFrom]") {
     REQUIRE(u64offset == 123);
 
     sf = SeekFrom::End(123);
-    RXX_MATCH(sf,
+    rxx::match(sf,
         [&](SeekFrom::Start const& s) {
             type = 1;
             u64offset = s.offset();
@@ -45,7 +45,7 @@ TEST_CASE("visit and match works", "[io::SeekFrom]") {
     REQUIRE(i64offset == 123);
 
     sf = SeekFrom::Current(456);
-    RXX_MATCH(sf,
+    rxx::match(sf,
         [&](SeekFrom::Start const& s) {
             type = 1;
             u64offset = s.offset();

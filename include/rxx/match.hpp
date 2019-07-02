@@ -2,6 +2,7 @@
 #define __RXX_MATCH_HPP__
 
 #include "rxx/utility.hpp"
+#include "rxx/var.hpp"
 
 namespace rxx {
 
@@ -32,7 +33,15 @@ inline constexpr auto overloaded(Ts&&... ts) -> Overloaded<Ts...> {
     return Overloaded<Ts...>(rxx::forward<Ts>(ts)...);
 }
 
-#define RXX_MATCH(v, ...) rxx::visit(rxx::overloaded(__VA_ARGS__), v)
+template<typename R, typename T, typename... Ts>
+inline constexpr R match(T&& matchee, Ts&&... cases) {
+    return rxx::visit(rxx::overloaded(rxx::forward<Ts>(cases)...), rxx::forward<T>(matchee));
+}
+
+template<typename T, typename... Ts>
+inline constexpr void match(T&& matchee, Ts&&... cases) {
+    rxx::visit(rxx::overloaded(rxx::forward<Ts>(cases)...), rxx::forward<T>(matchee));
+}
 
 } // namespace rxx
 

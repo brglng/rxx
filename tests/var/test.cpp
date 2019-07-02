@@ -23,7 +23,7 @@ TEST_CASE("Var visit and match works", "[Var]") {
     size_t id = 0;
 
     v = 123;
-    RXX_MATCH(v,
+    rxx::match(v,
         [&id](int) { id = 1; },
         [&id](float) { id = 2; },
         [&id](void*) { id = 3; }
@@ -31,7 +31,7 @@ TEST_CASE("Var visit and match works", "[Var]") {
     REQUIRE(id == v.index() + 1);
 
     v = 1.0f;
-    RXX_MATCH(v,
+    rxx::match(v,
         [&id](int) { id = 1; },
         [&id](float) { id = 2; },
         [&id](void*) { id = 3; }
@@ -39,7 +39,7 @@ TEST_CASE("Var visit and match works", "[Var]") {
     REQUIRE(id == v.index() + 1);
 
     v = nullptr;
-    RXX_MATCH(v,
+    rxx::match(v,
         [&id](int) { id = 1; },
         [&id](float) { id = 2; },
         [&id](void*) { id = 3; }
