@@ -185,7 +185,9 @@ class Var {
     };
 
     void destroy() {
-        m_destroy_funcs[m_type_index - 1](&m_storage);
+        if (m_type_index != 0) {
+            m_destroy_funcs[m_type_index - 1](&m_storage);
+        }
     }
 
 public:
@@ -319,6 +321,16 @@ inline void visit(V&& v, Var<Ts...>&& var) {
     rxx::var::impl::VisitDispatcher<void, V, Ts...>::funcs[var.index() + 1](rxx::forward<V>(v), var.storage());
 }
 
+template<class R, class V, class T>
+inline constexpr R visit(V&& v, T&& t) {
+    return rxx::visit(rxx::forward<V>(v), rxx::forward<T>(t).as_var());
+}
+
+template<class V, class T>
+inline constexpr void visit(V&& v, T&& t) {
+    rxx::visit(rxx::forward<V>(v), rxx::forward<T>(t).as_var());
+}
+
 namespace var {
 
 template<class... Args, class T>
@@ -328,6 +340,6 @@ inline auto make(T&& value) -> Var<rxx::remove_reference_t<Args>...> {
 
 } // namespace var
 
-} // namespace rxx
+}
 
 #endif /* end of include guard: __RXX_VAR_HPP__ */

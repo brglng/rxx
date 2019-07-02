@@ -1,4 +1,3 @@
-#include <cstdio>
 #include <catch2/catch.hpp>
 #include "rxx/var.hpp"
 #include "rxx/match.hpp"
@@ -18,7 +17,7 @@ TEST_CASE("Var type is correct", "[Var]") {
     REQUIRE(v.index() == 2);
 }
 
-TEST_CASE("Var visit and match works") {
+TEST_CASE("Var visit and match works", "[Var]") {
     Var<int, float, void*> v;
 
     size_t id = 0;
@@ -27,7 +26,7 @@ TEST_CASE("Var visit and match works") {
     RXX_MATCH(v,
         [&id](int) { id = 1; },
         [&id](float) { id = 2; },
-        [&id](void*) { id = 3; },
+        [&id](void*) { id = 3; }
     );
     REQUIRE(id == v.index() + 1);
 

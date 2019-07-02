@@ -28,4 +28,5 @@ target_link_libraries(rxx-test-main PUBLIC
   $<$<PLATFORM_ID:Linux>:stdcxx::stdcxx>
   )
 
+add_subdirectory(io)
 add_subdirectory(var)

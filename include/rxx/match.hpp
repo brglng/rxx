@@ -32,7 +32,7 @@ inline constexpr auto overloaded(Ts&&... ts) -> Overloaded<Ts...> {
     return Overloaded<Ts...>(rxx::forward<Ts>(ts)...);
 }
 
-#define RXX_MATCH(v, ...) rxx::visit(overloaded(__VA_ARGS__), v)
+#define RXX_MATCH(v, ...) rxx::visit(rxx::overloaded(__VA_ARGS__), v)
 
 } // namespace rxx
 

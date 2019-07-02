@@ -1,5 +1,5 @@
 add_executable(var-test
-  var_test.cpp
+  test.cpp
   )
 
 target_compile_features(var-test PRIVATE ${rxx_compile_features})

@@ -152,6 +152,26 @@ using make_integer_sequence = typename rxx::impl::make_integer_sequence_helper<T
 template<std::size_t N>
 using make_index_sequence = rxx::make_integer_sequence<std::size_t, N>;
 
+namespace impl {
+template<class T, class U>
+struct SameType;
+
+template<class T>
+struct SameType<T, T> {
+    using type = T;
+};
+} // namespace impl
+
+template<class T, class U>
+using same_t = typename rxx::impl::SameType<T, U>::type;
+
+
+template<class, class = std::void_t<>>
+struct require : std::false_type {};
+
+template<class T>
+struct require<T, std::void_t<decltype(T::require)>> : std::true_type {};
+
 }
 
 #endif /* end of include guard: __RXX_TYPE_TRAITS_HPP__ */
