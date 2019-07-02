@@ -118,18 +118,61 @@ template<class V> struct InvalidVisit {
     };
 };
 
+template<class R, class V, class T> struct ConstVisit {
+    static constexpr R visit(V&& visitor, void const* storage) {
+        return rxx::invoke(visitor, *reinterpret_cast<T const*>(storage));
+    };
+};
+
+template<class V, class T> struct ConstVisit<void, V, T> {
+    static void visit(V&& visitor, void const* storage) {
+        rxx::invoke(visitor, *reinterpret_cast<T const*>(storage));
+    };
+};
+
+template<class R, class V> struct ConstVisit<R, V, void> {
+    static constexpr R visit(V&& visitor, void const*) {
+        return rxx::invoke(visitor);
+    };
+};
+
+template<class V> struct ConstVisit<void, V, void> {
+    static void visit(V&& visitor, void const*) {
+        rxx::invoke(visitor);
+    };
+};
+
+template<class V> struct InvalidConstVisit {
+    static void visit(V&&, void const*) {
+        assert(0);
+    };
+};
+
 template<class R, class V>
 using VisitFunc = decltype(Visit<R, V, void>::visit);
 
+template<class R, class V>
+using ConstVisitFunc = decltype(ConstVisit<R, V, void>::visit);
+
 template<class R, class V, class... Ts> struct VisitDispatcher {
-    static constexpr rxx::var::impl::VisitFunc<R, V>* funcs[] = {
+    static constexpr const rxx::var::impl::VisitFunc<R, V>* funcs[] = {
         &InvalidVisit<V>::visit,
         &Visit<R, V, Ts>::visit...
     };
 };
 
+template<class R, class V, class... Ts> struct ConstVisitDispatcher {
+    static constexpr const rxx::var::impl::ConstVisitFunc<R, V>* funcs[] = {
+        &InvalidConstVisit<V>::visit,
+        &ConstVisit<R, V, Ts>::visit...
+    };
+};
+
 template<class R, class V, class... Ts>
-constexpr rxx::var::impl::VisitFunc<R, V>* rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[];
+constexpr const rxx::var::impl::VisitFunc<R, V>* rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[];
+
+template<class R, class V, class... Ts>
+constexpr const rxx::var::impl::ConstVisitFunc<R, V>* rxx::var::impl::ConstVisitDispatcher<R, V, Ts...>::funcs[];
 
 template <typename T>
 struct Identity { using type = T; };
@@ -296,9 +339,9 @@ template<typename... Ts> struct is_var<Var<Ts...>> : std::true_type {};
 
 template<class R = void, class V, class... Ts>
 inline constexpr R visit(V&& v, Var<Ts...> const& var) {
-    return rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[var.index() + 1](
+    return rxx::var::impl::ConstVisitDispatcher<R, V, Ts...>::funcs[var.index() + 1](
         rxx::forward<V>(v),
-        const_cast<void*>(var.storage())
+        var.storage()
     );
 }
 
