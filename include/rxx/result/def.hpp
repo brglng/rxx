@@ -1288,46 +1288,11 @@ inline auto Err(E&& err) -> result::Err<rxx::remove_reference_t<E>> {
     return result::Err<rxx::remove_reference_t<E>>{rxx::forward<E>(err)};
 }
 
-template<class R, class V, class T, class E>
-inline R visit(V&& v, Result<T, E>& res) {
-    return res.is_ok() ?
-        rxx::invoke(v, res.unwrap()) :
-        rxx::invoke(v, res.unwrap_err());
-}
-
-template<class R, class V, class T, class E>
-inline R visit(V&& v, Result<T, E> const& res) {
-    return res.is_ok() ?
-        rxx::invoke(v, res.unwrap()) :
-        rxx::invoke(v, res.unwrap_err());
-}
-
-template<class R, class V, class T, class E>
+template<class R = void, class V, class T, class E>
 inline R visit(V&& v, Result<T, E>&& res) {
     return res.is_ok() ?
-        rxx::invoke(v, res.unwrap()) :
-        rxx::invoke(v, res.unwrap_err());
-}
-
-template<class V, class T, class E>
-inline void visit(V&& v, Result<T, E>& res) {
-    return res.is_ok() ?
-        rxx::invoke(v, res.unwrap()) :
-        rxx::invoke(v, res.unwrap_err());
-}
-
-template<class V, class T, class E>
-inline void visit(V&& v, Result<T, E> const& res) {
-    return res.is_ok() ?
-        rxx::invoke(v, res.unwrap()) :
-        rxx::invoke(v, res.unwrap_err());
-}
-
-template<class V, class T, class E>
-inline void visit(V&& v, Result<T, E>&& res) {
-    return res.is_ok() ?
-        rxx::invoke(v, res.unwrap()) :
-        rxx::invoke(v, res.unwrap_err());
+        rxx::invoke(rxx::forward<V>(v), rxx::forward<Result<T, E>>(res).unwrap()) :
+        rxx::invoke(rxx::forward<V>(v), rxx::forward<Result<T, E>>(res).unwrap_err());
 }
 
 #define RXX_TRY(...) ({                     \

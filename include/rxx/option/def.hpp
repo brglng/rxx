@@ -1141,46 +1141,11 @@ inline auto Some(T&& value) -> Option<rxx::remove_reference_t<T>> {
     return Option<rxx::remove_reference_t<T>>(rxx::forward<T>(value));
 }
 
-template<class R, class V, class T>
-inline constexpr R visit(V&& visitor, Option<T>& opt) {
-    return opt.is_some() ?
-        rxx::invoke(visitor, opt.unwrap()) :
-        rxx::invoke(visitor);
-}
-
-template<class R, class V, class T>
-inline constexpr R visit(V&& visitor, Option<T> const& opt) {
-    return opt.is_some() ?
-        rxx::invoke(visitor, opt.unwrap()) :
-        rxx::invoke(visitor);
-}
-
-template<class R, class V, class T>
+template<class R = void, class V, class T>
 inline constexpr R visit(V&& visitor, Option<T>&& opt) {
     return opt.is_some() ?
-        rxx::invoke(visitor, opt.unwrap()) :
-        rxx::invoke(visitor);
-}
-
-template<class V, class T>
-inline constexpr void visit(V&& visitor, Option<T>& opt) {
-    opt.is_some() ?
-        rxx::invoke(visitor, opt.unwrap()) :
-        rxx::invoke(visitor);
-}
-
-template<class V, class T>
-inline constexpr void visit(V&& visitor, Option<T> const& opt) {
-    opt.is_some() ?
-        rxx::invoke(visitor, opt.unwrap()) :
-        rxx::invoke(visitor);
-}
-
-template<class V, class T>
-inline constexpr void visit(V&& visitor, Option<T>&& opt) {
-    opt.is_some() ?
-        rxx::invoke(visitor, opt.unwrap()) :
-        rxx::invoke(visitor);
+        rxx::invoke(rxx::forward<V>(visitor), rxx::forward<Option<T>>(opt).unwrap()) :
+        rxx::invoke(rxx::forward<V>(visitor));
 }
 
 } // namespace rxx
