@@ -115,27 +115,31 @@ public:
 #endif
 };
 
+namespace slice {
+
 template<typename T, std::size_t N>
-constexpr auto slice(T (&&a)[N]) -> Slice<T> {
+inline constexpr auto make(T (&&a)[N]) -> Slice<T> {
     return Slice<T>(rxx::forward<T[N]>(a));
 }
 
 template<typename T, std::size_t N>
-constexpr auto slice(T (&a)[N]) -> Slice<T> {
+inline constexpr auto make(T (&a)[N]) -> Slice<T> {
     return Slice<T>(a);
 }
 
-template<typename T>
-constexpr auto slice(T* ptr, size_t len) -> Slice<T> {
-    return Slice<T>(ptr, len);
-}
-
 template<typename... Args>
-constexpr auto slice(Args&&... args) -> Slice<rxx::remove_reference_t<rxx::common_type_t<Args...>>> {
+inline constexpr auto make(Args&&... args) -> Slice<rxx::remove_reference_t<rxx::common_type_t<Args...>>> {
     using T = rxx::remove_reference_t<rxx::common_type_t<Args...>>;
     return T(rxx::forward<Args>(args)...);
 }
 
+template<typename T>
+inline constexpr auto from_raw_parts(T* ptr, size_t len) -> Slice<T> {
+    return Slice<T>(ptr, len);
 }
+
+} // namespace slice
+
+} // namespace rxx
 
 #endif /* end of include guard: __RXX_SLICE_HPP__ */

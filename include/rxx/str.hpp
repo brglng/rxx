@@ -127,39 +127,43 @@ public:
 #endif
 };
 
-inline bool operator==(MutStr const& lhs, Str const& rhs) {
+inline bool operator==(MutStr const& lhs, Str const& rhs) noexcept {
     if (lhs.len() != rhs.len())
         return false;
 
     return std::strncmp(lhs.c_str(), rhs.c_str(), lhs.len());
 }
 
+namespace str {
+
 template<std::size_t N>
-inline constexpr auto str(const char (&s)[N]) -> Str {
+inline constexpr auto make(const char (&s)[N]) noexcept -> Str {
     return Str(s);
 }
 
 template<std::size_t N>
-inline constexpr auto str(char (&s)[N]) -> Str {
+inline constexpr auto make(char (&s)[N]) noexcept -> MutStr {
     return MutStr(s);
 }
 
-inline auto str(const char* s) -> Str {
+inline auto from_c_str(const char* s) noexcept -> Str {
     return Str(s, std::strlen(s));
 }
 
-inline auto str(char* s) -> MutStr {
+inline auto from_c_str(char* s) noexcept -> MutStr {
     return MutStr(s, std::strlen(s));
 }
 
-inline Str str(std::string const& s) {
+inline Str from_std_string(std::string const& s) noexcept {
     return Str(&s[0], s.size());
 }
 
-inline MutStr str(std::string&& s) {
+inline MutStr from_std_string(std::string&& s) noexcept {
     return MutStr(&s[0], s.size());
 }
 
-}
+} // namespace str
+
+} // namespace rxx
 
 #endif /* end of include guard: __RXX_STR_HPP__ */

@@ -155,24 +155,24 @@ template<class R, class V>
 using ConstVisitFunc = decltype(ConstVisit<R, V, void>::visit);
 
 template<class R, class V, class... Ts> struct VisitDispatcher {
-    static constexpr const rxx::var::impl::VisitFunc<R, V>* funcs[] = {
+    static constexpr rxx::var::impl::VisitFunc<R, V>* funcs[] = {
         &InvalidVisit<V>::visit,
         &Visit<R, V, Ts>::visit...
     };
 };
 
 template<class R, class V, class... Ts> struct ConstVisitDispatcher {
-    static constexpr const rxx::var::impl::ConstVisitFunc<R, V>* funcs[] = {
+    static constexpr rxx::var::impl::ConstVisitFunc<R, V>* funcs[] = {
         &InvalidConstVisit<V>::visit,
         &ConstVisit<R, V, Ts>::visit...
     };
 };
 
 template<class R, class V, class... Ts>
-constexpr const rxx::var::impl::VisitFunc<R, V>* rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[];
+constexpr rxx::var::impl::VisitFunc<R, V>* rxx::var::impl::VisitDispatcher<R, V, Ts...>::funcs[];
 
 template<class R, class V, class... Ts>
-constexpr const rxx::var::impl::ConstVisitFunc<R, V>* rxx::var::impl::ConstVisitDispatcher<R, V, Ts...>::funcs[];
+constexpr rxx::var::impl::ConstVisitFunc<R, V>* rxx::var::impl::ConstVisitDispatcher<R, V, Ts...>::funcs[];
 
 template <typename T>
 struct Identity { using type = T; };

@@ -44,7 +44,6 @@ public:
 };
 
 } // namespace io
-
 } // namespace rxx
 
 #endif /* end of include guard: __RXX_IO_SEEK_FROM_HPP__ */
