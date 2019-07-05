@@ -1285,7 +1285,7 @@ inline auto Ok(T&& value) -> result::Ok<rxx::remove_reference_t<T>> {
 
 template<typename E>
 inline auto Err(E&& err) -> result::Err<rxx::remove_reference_t<E>> {
-    return result::Err<rxx::remove_reference_t<E>>{rxx::forward<E>(err)};
+    return result::Err<rxx::remove_reference_t<E>>(rxx::forward<E>(err));
 }
 
 template<class R = void, class V, class T, class E>
