@@ -118,19 +118,19 @@ public:
 namespace slice {
 
 template<typename T, std::size_t N>
-inline constexpr auto make(T (&&a)[N]) -> Slice<T> {
+inline constexpr auto init(T (&&a)[N]) -> Slice<T> {
     return Slice<T>(rxx::forward<T[N]>(a));
 }
 
 template<typename T, std::size_t N>
-inline constexpr auto make(T (&a)[N]) -> Slice<T> {
+inline constexpr auto init(T (&a)[N]) -> Slice<T> {
     return Slice<T>(a);
 }
 
 template<typename... Args>
-inline constexpr auto make(Args&&... args) -> Slice<rxx::remove_reference_t<rxx::common_type_t<Args...>>> {
+inline constexpr auto init(Args&&... args) -> Slice<rxx::remove_reference_t<rxx::common_type_t<Args...>>> {
     using T = rxx::remove_reference_t<rxx::common_type_t<Args...>>;
-    return T(rxx::forward<Args>(args)...);
+    return T{rxx::forward<Args>(args)...};
 }
 
 template<typename T>
