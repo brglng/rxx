@@ -39,7 +39,7 @@ inline constexpr R match(T&& matchee, Ts&&... cases) {
 }
 
 template<typename T, typename... Ts>
-inline constexpr void match(T&& matchee, Ts&&... cases) {
+inline void match(T&& matchee, Ts&&... cases) {
     rxx::visit(rxx::overloaded(rxx::forward<Ts>(cases)...), rxx::forward<T>(matchee));
 }
 
