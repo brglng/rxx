@@ -129,8 +129,7 @@ inline constexpr auto init(T (&a)[N]) -> Slice<T> {
 
 template<typename... Args>
 inline constexpr auto init(Args&&... args) -> Slice<rxx::remove_reference_t<rxx::common_type_t<Args...>>> {
-    using T = rxx::remove_reference_t<rxx::common_type_t<Args...>>;
-    return T{rxx::forward<Args>(args)...};
+    return {rxx::forward<Args>(args)...};
 }
 
 template<typename T>
