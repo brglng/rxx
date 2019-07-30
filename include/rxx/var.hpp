@@ -363,7 +363,7 @@ R> visit(V&& v, T&& t) {
 namespace var {
 
 template<class... Args, class T>
-inline auto make(T&& value) -> Var<rxx::remove_reference_t<Args>...> {
+inline auto init(T&& value) -> Var<rxx::remove_reference_t<Args>...> {
     return Var<rxx::remove_reference_t<Args>...>(rxx::forward<T>(value));
 }
 

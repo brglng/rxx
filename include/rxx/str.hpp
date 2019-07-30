@@ -137,12 +137,12 @@ inline bool operator==(MutStr const& lhs, Str const& rhs) noexcept {
 namespace str {
 
 template<std::size_t N>
-inline constexpr auto make(const char (&s)[N]) noexcept -> Str {
+inline constexpr auto init(const char (&s)[N]) noexcept -> Str {
     return Str(s);
 }
 
 template<std::size_t N>
-inline constexpr auto make(char (&s)[N]) noexcept -> MutStr {
+inline constexpr auto init(char (&s)[N]) noexcept -> MutStr {
     return MutStr(s);
 }
 
@@ -158,12 +158,23 @@ inline Str from_std_string(std::string const& s) noexcept {
     return Str(&s[0], s.size());
 }
 
+inline MutStr from_std_string(std::string& s) noexcept {
+    return MutStr(&s[0], s.size());
+}
+
 inline MutStr from_std_string(std::string&& s) noexcept {
     return MutStr(&s[0], s.size());
 }
 
-} // namespace str
+inline MutStr from_raw_parts(char* s, std::size_t len) {
+    return MutStr(s, len);
+}
 
+inline Str from_raw_parts(const char* s, std::size_t len) {
+    return Str(s, len);
+}
+
+} // namespace str
 } // namespace rxx
 
 #endif /* end of include guard: __RXX_STR_HPP__ */
