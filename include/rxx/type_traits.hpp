@@ -166,11 +166,11 @@ template<class T, class U>
 using same_t = typename rxx::impl::SameType<T, U>::type;
 
 
-template<class, class = std::void_t<>>
+template<class, class = rxx::void_t<>>
 struct require : std::false_type {};
 
 template<class T>
-struct require<T, std::void_t<decltype(T::require)>> : std::true_type {};
+struct require<T, rxx::void_t<decltype(T::require)>> : std::true_type {};
 
 }
 
