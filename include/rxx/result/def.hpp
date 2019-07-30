@@ -1295,11 +1295,11 @@ inline R visit(V&& v, Result<T, E>&& res) {
         rxx::invoke(rxx::forward<V>(v), rxx::forward<Result<T, E>>(res).unwrap_err());
 }
 
-#define RXX_TRY(...) ({                     \
-    auto __res = __VA_ARGS__;               \
-    if (__res.is_err())                     \
-        return Err(__res.unwrap_err());     \
-    __res.unwrap();                         \
+#define RXX_TRY(...) ({                         \
+    auto __res = __VA_ARGS__;                   \
+    if (__res.is_err())                         \
+        return rxx::Err(__res.unwrap_err());    \
+    __res.unwrap();                             \
 })
 
 } // namespace rxx
