@@ -33,14 +33,9 @@ inline constexpr auto overloaded(Ts&&... ts) -> Overloaded<Ts...> {
     return Overloaded<Ts...>(rxx::forward<Ts>(ts)...);
 }
 
-template<typename R, typename T, typename... Ts>
+template<typename R = void, typename T, typename... Ts>
 inline constexpr R match(T&& matchee, Ts&&... cases) {
     return rxx::visit(rxx::overloaded(rxx::forward<Ts>(cases)...), rxx::forward<T>(matchee));
-}
-
-template<typename T, typename... Ts>
-inline void match(T&& matchee, Ts&&... cases) {
-    rxx::visit(rxx::overloaded(rxx::forward<Ts>(cases)...), rxx::forward<T>(matchee));
 }
 
 } // namespace rxx
