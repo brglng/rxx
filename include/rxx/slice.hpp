@@ -6,6 +6,7 @@
 #include <utility>
 #include <cstdint>
 #include <cstdlib>
+#include "rxx/type_traits.hpp"
 #include "rxx/utility.hpp"
 
 namespace rxx {
@@ -129,7 +130,7 @@ inline constexpr auto init(T (&a)[N]) -> Slice<T> {
 
 template<typename... Args>
 inline constexpr auto init(Args&&... args) -> Slice<rxx::remove_reference_t<rxx::common_type_t<Args...>>> {
-    return {rxx::forward<Args>(args)...};
+    return rxx::identity<rxx::remove_reference_t<rxx::common_type_t<Args...>>[]>{rxx::forward<Args>(args)...};
 }
 
 template<typename T>

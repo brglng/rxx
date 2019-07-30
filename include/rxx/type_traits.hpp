@@ -8,6 +8,8 @@ namespace rxx {
 
 #define RXX_REQUIRES(...) typename std::enable_if<__VA_ARGS__::value, bool>::type = false
 
+template<typename T> using identity = T;
+
 template<typename... Ts> struct make_void { typedef void type;};
 template<typename... Ts> using void_t = typename rxx::make_void<Ts...>::type;
 
