@@ -39,7 +39,7 @@ private:
 
 public:
     rxx::Var<Start, End, Current>& as_var() & { return m_var; }
-    constexpr rxx::Var<Start, End, Current> const& as_var() const& { return m_var; }
+    rxx::Var<Start, End, Current> const& as_var() const& { return m_var; }
     rxx::Var<Start, End, Current>&& as_var() && { return rxx::move(m_var); }
 };
 

@@ -128,9 +128,15 @@ inline constexpr auto init(T (&a)[N]) -> Slice<T> {
     return Slice<T>(a);
 }
 
+template<typename T, std::size_t N>
+inline constexpr auto init(const T (&a)[N]) -> Slice<const T> {
+    return Slice<const T>(a);
+}
+
 template<typename... Args>
 inline constexpr auto init(Args&&... args) -> Slice<rxx::remove_reference_t<rxx::common_type_t<Args...>>> {
-    return rxx::identity<rxx::remove_reference_t<rxx::common_type_t<Args...>>[]>{rxx::forward<Args>(args)...};
+    using T = rxx::remove_reference_t<rxx::common_type_t<Args...>>;
+    return Slice<T>(rxx::identity<T[]>{rxx::forward<Args>(args)...});
 }
 
 template<typename T>
