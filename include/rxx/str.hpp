@@ -16,9 +16,9 @@ class MutStr {
 
 public:
     template<std::size_t N>
-    constexpr MutStr(char (&s)[N]) noexcept : m_bytes(s[N - 1] == 0 ? (unsigned char (&)[N - 1])s : (unsigned char (&)[N])s) {}
+    constexpr MutStr(char (&s)[N]) noexcept : m_bytes((std::uint8_t*)s, s[N - 1] == 0 ? N - 1 : N) {}
 
-    explicit constexpr MutStr(char *s, size_t len) noexcept : m_bytes((uint8_t*)s, len + 1) {}
+    explicit constexpr MutStr(char *s, size_t len) noexcept : m_bytes((uint8_t*)s, len) {}
 
     constexpr auto len() const noexcept -> size_t {
         return m_bytes.len();
@@ -68,15 +68,15 @@ class Str {
 public:
     template<std::size_t N>
     constexpr Str(const char (&s)[N]) noexcept :
-        m_bytes(s[N - 1] == 0 ? (const unsigned char (&)[N - 1])s : (const unsigned char (&)[N])s)
+        m_bytes((const std::uint8_t*)s, s[N - 1] == 0 ? N - 1 : N)
     {}
 
     template<std::size_t N>
     constexpr Str(char (&s)[N]) noexcept :
-        m_bytes(s[N - 1] == 0 ? (const unsigned char (&)[N - 1])s : (const unsigned char (&)[N])s)
+        m_bytes((const std::uint8_t*)s, s[N - 1] == 0 ? N - 1 : N)
     {}
 
-    explicit constexpr Str(const char* s, size_t len) noexcept : m_bytes((uint8_t const*)s, len + 1) {}
+    explicit constexpr Str(const char* s, size_t len) noexcept : m_bytes((uint8_t const*)s, len) {}
 
     constexpr Str(const MutStr s) noexcept : m_bytes(s.as_bytes().as_ptr(), s.as_bytes().len()) {}
 
@@ -166,11 +166,11 @@ inline MutStr from_std_string(std::string&& s) noexcept {
     return MutStr(&s[0], s.size());
 }
 
-inline MutStr from_raw_parts(char* s, std::size_t len) {
+inline constexpr MutStr from_raw_parts(char* s, std::size_t len) {
     return MutStr(s, len);
 }
 
-inline Str from_raw_parts(const char* s, std::size_t len) {
+inline constexpr Str from_raw_parts(const char* s, std::size_t len) {
     return Str(s, len);
 }
 
