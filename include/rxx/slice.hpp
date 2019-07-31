@@ -65,6 +65,11 @@ public:
         return m_ptr[i];
     }
 #endif
+
+    T* begin() { return m_ptr[0]; }
+    T* end() { return m_ptr[m_len]; }
+    const T* begin() const { return m_ptr[0]; }
+    const T* end() const { return m_ptr[m_len]; }
 };
 
 template<typename T>
@@ -114,6 +119,9 @@ public:
         return m_ptr[i];
     }
 #endif
+
+    const T* begin() const { return m_ptr[0]; }
+    const T* end() const { return m_ptr[m_len]; }
 };
 
 namespace slice {
