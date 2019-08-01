@@ -162,10 +162,6 @@ inline MutStr from_std_string(std::string& s) noexcept {
     return MutStr(&s[0], s.size());
 }
 
-inline MutStr from_std_string(std::string&& s) noexcept {
-    return MutStr(&s[0], s.size());
-}
-
 inline constexpr MutStr from_raw_parts(char* s, std::size_t len) {
     return MutStr(s, len);
 }

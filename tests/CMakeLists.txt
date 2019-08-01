@@ -30,4 +30,6 @@ target_link_libraries(rxx-test-main PUBLIC
 
 add_subdirectory(io)
 add_subdirectory(result)
+add_subdirectory(slice)
+add_subdirectory(str)
 add_subdirectory(var)

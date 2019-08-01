@@ -2,6 +2,7 @@
 #define __RXX_SLICE_HPP__
 
 #include <cassert>
+#include <initializer_list>
 #include <type_traits>
 #include <utility>
 #include <cstdint>
@@ -20,9 +21,6 @@ class Slice {
     size_t  m_len;
 
 public:
-    template<std::size_t N>
-    constexpr Slice(T (&&a)[N]) : m_ptr(a), m_len(N) {}
-
     template<std::size_t N>
     constexpr Slice(T (&a)[N]) : m_ptr(a), m_len(N) {}
 
@@ -68,23 +66,22 @@ public:
 
     T* begin() { return &m_ptr[0]; }
     T* end() { return &m_ptr[m_len]; }
-    const T* begin() const { return &m_ptr[0]; }
-    const T* end() const { return &m_ptr[m_len]; }
+    constexpr const T* begin() const { return &m_ptr[0]; }
+    constexpr const T* end() const { return &m_ptr[m_len]; }
 };
 
 template<typename T>
 class Slice<const T> {
-    T const*    m_ptr;
+    const T*    m_ptr;
     size_t      m_len;
 
 public:
     template<std::size_t N>
-    constexpr Slice(const T (&&a)[N]) : m_ptr(a), m_len(N) {}
-
-    template<std::size_t N>
     constexpr Slice(const T (&a)[N]) : m_ptr(a), m_len(N) {}
 
-    constexpr Slice(T const* ptr, size_t len) : m_ptr(ptr), m_len(len) {}
+    constexpr Slice(std::initializer_list<T> il) : m_ptr(il.begin()), m_len(il.size()) {}
+
+    constexpr Slice(const T* ptr, size_t len) : m_ptr(ptr), m_len(len) {}
 
     constexpr Slice(Slice<T> mutslice) :
         m_ptr(mutslice.as_ptr()), m_len(mutslice.len())
@@ -100,12 +97,12 @@ public:
 
     // auto first() -> Option<T const&>;
 
-    // constexpr auto first() const -> Option<T const&>;
+    // constexpr auto first() const -> Option<const T&>;
 
     // auto split_first() -> Option<tuple<T&, slice<T&>> {
     // }
 
-    constexpr auto as_ptr() const -> T const* {
+    constexpr auto as_ptr() const -> const T* {
         return m_ptr;
     }
 
@@ -120,16 +117,11 @@ public:
     }
 #endif
 
-    const T* begin() const { return &m_ptr[0]; }
-    const T* end() const { return &m_ptr[m_len]; }
+    constexpr const T* begin() const { return &m_ptr[0]; }
+    constexpr const T* end() const { return &m_ptr[m_len]; }
 };
 
 namespace slice {
-
-template<typename T, std::size_t N>
-inline constexpr auto init(T (&&a)[N]) -> Slice<T> {
-    return Slice<T>(rxx::forward<T[N]>(a));
-}
 
 template<typename T, std::size_t N>
 inline constexpr auto init(T (&a)[N]) -> Slice<T> {
@@ -141,10 +133,9 @@ inline constexpr auto init(const T (&a)[N]) -> Slice<const T> {
     return Slice<const T>(a);
 }
 
-template<typename... Args>
-inline constexpr auto init(Args&&... args) -> Slice<rxx::remove_reference_t<rxx::common_type_t<Args...>>> {
-    using T = rxx::remove_reference_t<rxx::common_type_t<Args...>>;
-    return Slice<T>(rxx::identity<T[]>{rxx::forward<Args>(args)...});
+template<class T>
+inline constexpr auto init(std::initializer_list<T> il) -> Slice<const T> {
+    return Slice<const T>(il);
 }
 
 template<typename T>
