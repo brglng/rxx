@@ -7,6 +7,7 @@
 #include <utility>
 #include <cstdint>
 #include <cstdlib>
+#include <vector>
 #include "rxx/type_traits.hpp"
 #include "rxx/utility.hpp"
 
@@ -25,6 +26,8 @@ public:
     constexpr Slice(T (&a)[N]) : m_ptr(a), m_len(N) {}
 
     constexpr Slice(T* ptr, size_t len) : m_ptr(ptr), m_len(len) {}
+
+    Slice(std::vector<T>& vec) : m_ptr(&vec[0]), m_len(vec.size()) {}
 
     auto constexpr len() const -> size_t {
         return m_len;
@@ -86,6 +89,8 @@ public:
     constexpr Slice(Slice<T> mutslice) :
         m_ptr(mutslice.as_ptr()), m_len(mutslice.len())
     {}
+
+    Slice(const std::vector<T>& vec) : m_ptr(&vec[0]), m_len(vec.size()) {}
 
     constexpr auto len() const -> size_t {
         return m_len;
