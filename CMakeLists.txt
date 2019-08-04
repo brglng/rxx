@@ -51,8 +51,6 @@ set(${PROJECT_NAME}_full_configuration "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -
 include(GNUInstallDirs)
 include(RxxTargetProperties)
 
-add_subdirectory(deps)
-
 add_library(rxx INTERFACE)
 target_include_directories(rxx INTERFACE
   $<INSTALL_INTERFACE:include>
