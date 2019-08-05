@@ -25,7 +25,6 @@ target_compile_options(rxx-test-main PRIVATE
 target_link_libraries(rxx-test-main PUBLIC
   Catch2::Catch2
   Rxx::rxx
-  $<$<PLATFORM_ID:Linux>:stdcxx::stdcxx>
   )
 
 add_subdirectory(io)

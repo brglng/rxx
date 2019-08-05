@@ -59,7 +59,10 @@ target_include_directories(rxx INTERFACE
 target_compile_features(rxx INTERFACE ${rxx_compile_features})
 target_compile_definitions(rxx INTERFACE ${rxx_compile_definitions})
 target_link_libraries(rxx INTERFACE
-  $<$<PLATFORM_ID:Linux>:stdcxx::stdcxx rt dl pthread m>
+  $<$<PLATFORM_ID:Linux>:rt>
+  $<$<PLATFORM_ID:Linux>:dl>
+  $<$<PLATFORM_ID:Linux>:pthread>
+  $<$<PLATFORM_ID:Linux>:m>
   )
 add_library(Rxx::rxx ALIAS rxx)
 
