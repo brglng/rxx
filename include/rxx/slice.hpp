@@ -156,6 +156,21 @@ inline constexpr bool operator==(Slice<const T> lhs, Slice<const T> rhs) {
     return lhs.len() == rhs.len() ? std::equal(lhs.begin(), lhs.end(), rhs.begin()) : false;
 }
 
+template<class T>
+inline constexpr bool operator==(Slice<const T> lhs, Slice<T> rhs) {
+    return lhs.len() == rhs.len() ? std::equal(lhs.begin(), lhs.end(), rhs.begin()) : false;
+}
+
+template<class T>
+inline constexpr bool operator==(Slice<T> lhs, Slice<const T> rhs) {
+    return lhs.len() == rhs.len() ? std::equal(lhs.begin(), lhs.end(), rhs.begin()) : false;
+}
+
+template<class T>
+inline constexpr bool operator==(Slice<T> lhs, Slice<T> rhs) {
+    return lhs.len() == rhs.len() ? std::equal(lhs.begin(), lhs.end(), rhs.begin()) : false;
+}
+
 } // namespace rxx
 
 #endif /* end of include guard: __RXX_SLICE_HPP__ */
