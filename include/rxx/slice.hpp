@@ -1,6 +1,7 @@
 #ifndef __RXX_SLICE_HPP__
 #define __RXX_SLICE_HPP__
 
+#include <algorithm>
 #include <cassert>
 #include <initializer_list>
 #include <type_traits>
@@ -149,6 +150,11 @@ inline constexpr auto from_raw_parts(T* ptr, size_t len) -> Slice<T> {
 }
 
 } // namespace slice
+
+template<class T>
+inline constexpr bool operator==(Slice<const T> lhs, Slice<const T> rhs) {
+    return lhs.len() == rhs.len() ? std::equal(lhs.begin(), lhs.end(), rhs.begin()) : false;
+}
 
 } // namespace rxx
 
