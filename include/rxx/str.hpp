@@ -1,6 +1,7 @@
 #ifndef __RXX_STR_HPP__
 #define __RXX_STR_HPP__
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -46,12 +47,8 @@ public:
 
     uint8_t& operator[](size_t i) { return m_bytes[i]; }
 
-    bool operator==(MutStr const& rhs) const {
-        if (len() != rhs.len()) {
-            return false;
-        }
-
-        return std::strncmp(c_str(), rhs.c_str(), len()) == 0;
+    constexpr bool operator==(MutStr const& rhs) const {
+        return m_bytes == rhs.m_bytes;
     }
 
 #ifdef NDEBUG
@@ -106,18 +103,12 @@ public:
 
     uint8_t const& operator[](size_t i) { return m_bytes[i]; }
 
-    bool operator==(Str const& rhs) const {
-        if (len() != rhs.len())
-            return false;
-
-        return std::strncmp(c_str(), rhs.c_str(), len()) == 0;
+    constexpr bool operator==(Str const& rhs) const {
+        return m_bytes == rhs.m_bytes;
     }
 
-    bool operator==(MutStr const& rhs) const {
-        if (len() != rhs.len())
-            return false;
-
-        return std::strncmp(c_str(), rhs.c_str(), len()) == 0;
+    constexpr bool operator==(MutStr const& rhs) const {
+        return m_bytes == rhs.as_bytes();
     }
 
 #ifdef NDEBUG
@@ -127,11 +118,8 @@ public:
 #endif
 };
 
-inline bool operator==(MutStr const& lhs, Str const& rhs) noexcept {
-    if (lhs.len() != rhs.len())
-        return false;
-
-    return std::strncmp(lhs.c_str(), rhs.c_str(), lhs.len());
+inline constexpr bool operator==(MutStr const& lhs, Str const& rhs) noexcept {
+    return lhs.as_bytes() == rhs.as_bytes();
 }
 
 namespace str {
