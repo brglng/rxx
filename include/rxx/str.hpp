@@ -19,6 +19,8 @@ public:
     template<std::size_t N>
     constexpr MutStr(char (&s)[N]) noexcept : m_bytes((std::uint8_t*)s, s[N - 1] == 0 ? N - 1 : N) {}
 
+    MutStr(std::string& s) noexcept : MutStr(&s[0], s.size()) {}
+
     explicit constexpr MutStr(char *s, size_t len) noexcept : m_bytes((uint8_t*)s, len) {}
 
     constexpr auto len() const noexcept -> size_t {
@@ -72,6 +74,9 @@ public:
     constexpr Str(char (&s)[N]) noexcept :
         m_bytes((const std::uint8_t*)s, s[N - 1] == 0 ? N - 1 : N)
     {}
+
+    Str(std::string& s) noexcept : Str(&s[0], s.size()) {}
+    Str(const std::string& s) noexcept : Str(&s[0], s.size()) {}
 
     explicit constexpr Str(const char* s, size_t len) noexcept : m_bytes((uint8_t const*)s, len) {}
 
@@ -134,20 +139,20 @@ inline constexpr auto init(char (&s)[N]) noexcept -> MutStr {
     return MutStr(s);
 }
 
+inline Str ref(std::string const& s) noexcept {
+    return Str(&s[0], s.size());
+}
+
+inline MutStr ref(std::string& s) noexcept {
+    return MutStr(&s[0], s.size());
+}
+
 inline auto from_c_str(const char* s) noexcept -> Str {
     return Str(s, std::strlen(s));
 }
 
 inline auto from_c_str(char* s) noexcept -> MutStr {
     return MutStr(s, std::strlen(s));
-}
-
-inline Str from_std_string(std::string const& s) noexcept {
-    return Str(&s[0], s.size());
-}
-
-inline MutStr from_std_string(std::string& s) noexcept {
-    return MutStr(&s[0], s.size());
 }
 
 inline constexpr MutStr from_raw_parts(char* s, std::size_t len) {
