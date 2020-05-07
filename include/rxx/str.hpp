@@ -21,7 +21,7 @@ public:
 
     MutStr(std::string& s) noexcept : MutStr(&s[0], s.size()) {}
 
-    explicit constexpr MutStr(char *s, size_t len) noexcept : m_bytes((uint8_t*)s, len) {}
+    explicit MutStr(char *s, size_t len) noexcept : m_bytes((uint8_t*)s, len) {}
 
     constexpr auto len() const noexcept -> size_t {
         return m_bytes.len();

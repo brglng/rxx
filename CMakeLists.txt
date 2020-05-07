@@ -1,5 +1,5 @@
 # CMake Options
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.14)
 if(POLICY CMP0025)
   cmake_policy(SET CMP0025 NEW)
 endif()
