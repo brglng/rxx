@@ -49,7 +49,7 @@ endif()
 set(${PROJECT_NAME}_full_configuration "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE}")
 
 include(GNUInstallDirs)
-include(RxxTargetProperties)
+include(rxxTargetProperties)
 
 add_library(rxx INTERFACE)
 target_include_directories(rxx INTERFACE
@@ -64,19 +64,19 @@ target_link_libraries(rxx INTERFACE
   $<$<PLATFORM_ID:Linux>:pthread>
   $<$<PLATFORM_ID:Linux>:m>
   )
-add_library(Rxx::rxx ALIAS rxx)
+add_library(rxx::rxx ALIAS rxx)
 
 if(RXX_ENABLE_TESTING)
   add_subdirectory(tests)
 endif()
 
-export(TARGETS rxx NAMESPACE Rxx FILE RxxTargets.cmake)
-export(PACKAGE Rxx)
+export(TARGETS rxx NAMESPACE rxx FILE rxxTargets.cmake)
+export(PACKAGE rxx)
 
 if(${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
   install(FILES README.md CHANGELOG.md LICENSE DESTINATION .)
 
-  install(TARGETS rxx EXPORT RxxTargets
+  install(TARGETS rxx EXPORT rxxTargets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
@@ -85,26 +85,26 @@ if(${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
 
   install(DIRECTORY include DESTINATION .)
 
-  install(EXPORT RxxTargets
-    FILE RxxTargets.cmake
-    NAMESPACE Rxx::
-    DESTINATION lib/cmake/Rxx
+  install(EXPORT rxxTargets
+    FILE rxxTargets.cmake
+    NAMESPACE rxx::
+    DESTINATION lib/cmake/rxx
     )
 
   include(CMakePackageConfigHelpers)
   write_basic_package_version_file(
-    RxxConfigVersion.cmake
+    rxxConfigVersion.cmake
     VERSION ${PACKAGE_VERSION}
     COMPATIBILITY SameMajorVersion
     )
 
-  configure_file(cmake/RxxConfig.cmake.in RxxConfig.cmake @ONLY)
+  configure_file(cmake/rxxConfig.cmake.in rxxConfig.cmake @ONLY)
   install(
     FILES
-      "${CMAKE_CURRENT_BINARY_DIR}/RxxConfig.cmake"
-      "${CMAKE_CURRENT_BINARY_DIR}/RxxConfigVersion.cmake"
-    DESTINATION lib/cmake/Rxx
+      "${CMAKE_CURRENT_BINARY_DIR}/rxxConfig.cmake"
+      "${CMAKE_CURRENT_BINARY_DIR}/rxxConfigVersion.cmake"
+    DESTINATION lib/cmake/rxx
     )
 
-  include(RxxCPackConfig)
+  include(rxxCPackConfig)
 endif()

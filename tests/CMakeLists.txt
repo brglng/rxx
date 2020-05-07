@@ -24,7 +24,7 @@ target_compile_options(rxx-test-main PRIVATE
 
 target_link_libraries(rxx-test-main PUBLIC
   Catch2::Catch2
-  Rxx::rxx
+  rxx::rxx
   )
 
 add_subdirectory(io)
