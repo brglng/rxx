@@ -35,7 +35,7 @@ public:
 
     // }
 
-    constexpr const char* c_str() const {
+    const char* c_str() const {
         return (const char*)m_bytes.as_ptr();
     }
 
@@ -78,7 +78,7 @@ public:
     Str(std::string& s) noexcept : Str(&s[0], s.size()) {}
     Str(const std::string& s) noexcept : Str(&s[0], s.size()) {}
 
-    explicit constexpr Str(const char* s, size_t len) noexcept : m_bytes((uint8_t const*)s, len) {}
+    explicit Str(const char* s, size_t len) noexcept : m_bytes((uint8_t const*)s, len) {}
 
     constexpr Str(const MutStr s) noexcept : m_bytes(s.as_bytes().as_ptr(), s.as_bytes().len()) {}
 
@@ -90,7 +90,7 @@ public:
         return m_bytes.is_empty();
     }
 
-    constexpr const char* c_str() const {
+    const char* c_str() const {
         return (const char*)m_bytes.as_ptr();
     }
 
@@ -155,11 +155,11 @@ inline auto from_c_str(char* s) noexcept -> MutStr {
     return MutStr(s, std::strlen(s));
 }
 
-inline constexpr MutStr from_raw_parts(char* s, std::size_t len) {
+inline MutStr from_raw_parts(char* s, std::size_t len) {
     return MutStr(s, len);
 }
 
-inline constexpr Str from_raw_parts(const char* s, std::size_t len) {
+inline Str from_raw_parts(const char* s, std::size_t len) {
     return Str(s, len);
 }
 
