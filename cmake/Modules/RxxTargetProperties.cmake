@@ -36,8 +36,7 @@ set(rxx_compile_options "")
 include(CheckCXXCompilerFlag)
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
 elseif(${CMAKE_CXX_COMPILER_ID} MATCHES "^(GNU|.*Clang)$")
-  foreach(flag -fstack-protector-strong
-               -Wall
+  foreach(flag -Wall
                -Wcast-align
                -Wduplicated-branches
                -Wduplicated-cond
@@ -47,21 +46,14 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES "^(GNU|.*Clang)$")
                -Wnarrowing
                -Wpointer-arith
                -Wshadow
-               -Wstrict-prototypes
                -Wuninitialized
                -Wwrite-strings
                -Werror=c++11-compat
-               -Werror=discarded-qualifiers
-               -Werror=ignored-qualifiers
-               -Werror=implicit
-               -Werror=implicit-function-declaration
-               -Werror=implicit-int
                -Werror=init-self
-               -Werror=incompatible-pointer-types
                -Werror=return-type
                )
-    check_cxx_compiler_flag(${flag} rxx_has_cxxflag_${flag})
-    if(rxx_has_cxxflag_${flag})
+    check_cxx_compiler_flag(${flag} rxx_has_cxx_flag_${flag})
+    if(rxx_has_cxx_flag_${flag})
       list(APPEND rxx_compile_options ${flag})
     endif()
   endforeach()
