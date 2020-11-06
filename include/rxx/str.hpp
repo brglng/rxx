@@ -155,11 +155,11 @@ inline auto from_c_str(char* s) noexcept -> MutStr {
     return MutStr(s, std::strlen(s));
 }
 
-inline constexpr MutStr from_raw_parts(char* s, std::size_t len) {
+inline MutStr from_raw_parts(char* s, std::size_t len) {
     return MutStr(s, len);
 }
 
-inline constexpr Str from_raw_parts(const char* s, std::size_t len) {
+inline Str from_raw_parts(const char* s, std::size_t len) {
     return Str(s, len);
 }
 
